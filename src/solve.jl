@@ -41,6 +41,8 @@ function optimize_policy!(
     sddpm = JADEmodel.sddpm
     previous_rundata = nothing
 
+    @info("You are now using the customized NVE-JADE")
+
     check_settings_compatibility(rundata = d.rundata, solveoptions = solveoptions)
 
     if solveoptions.savedcuts != ""
