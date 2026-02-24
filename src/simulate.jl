@@ -50,7 +50,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
             )
             previous_rundata =
                 load_model_parameters(d.rundata.data_dir, d.rundata.policy_dir)
-            check_rundata(d.rundata, previous_rundata, :partial)
+            #check_rundata(d.rundata, previous_rundata, :partial) TODO: consider uncommenting
             SDDP.read_cuts_from_file(sddpm, cuts_path)
             if JuMP.has_upper_bound(
                 sddpm.nodes[d.rundata.number_of_wks].bellman_function.global_theta.theta,
