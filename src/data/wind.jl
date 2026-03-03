@@ -7,6 +7,7 @@ end
 
 function getwinds(file::String, nodes::Vector{Symbol})
     wind_stations = Dict{Symbol,WindStation}()
+    line_number = 0
     parsefile(file, true) do items
         line_number += 1
         if line_number == 1

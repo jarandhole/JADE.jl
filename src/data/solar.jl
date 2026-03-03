@@ -8,6 +8,7 @@ end
 
 function getsolars(file::String, nodes::Vector{Symbol})
     solar_stations = Dict{Symbol,SolarStation}()
+    line_number = 0
     parsefile(file, true) do items
         line_number += 1
         if line_number == 1
