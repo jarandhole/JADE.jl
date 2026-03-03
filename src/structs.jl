@@ -214,6 +214,9 @@ mutable struct Sets
     NATURAL_ARCS::Vector{NTuple{2,Symbol}} # arcs independent of hydro stations
     STATION_ARCS::Vector{NTuple{2,Symbol}} # origin and destination of water for a hydro station
     TRANS_ARCS::Vector{NTuple{2,Symbol}}   # power transmission arcs
+    INVESTABLES::Vector{Symbol} # Investment version: investable assets
+    WINDS::Vector{Symbol} # Investment version: wind stations
+    SOLARS::Vector{Symbol} # Investment version: solar stations
 end
 
 function Sets()
@@ -231,6 +234,9 @@ function Sets()
         NTuple{2,Symbol}[],
         NTuple{2,Symbol}[],
         NTuple{2,Symbol}[],
+        Symbol[],
+        Symbol[],
+        Symbol[],
     )
 end
 

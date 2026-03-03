@@ -143,6 +143,8 @@ end
 struct NodeHas
     thermal::Array{Symbol}
     hydro::Array{Symbol}
+    wind::Array{Symbol} # Investment version: wind stations at the node
+    solar::Array{Symbol} # Investment version: solar stations at the node
 end
 
 function process_set_items(
@@ -247,6 +249,9 @@ include(joinpath("data", "outages.jl"))
 include(joinpath("data", "fixed.jl"))
 include(joinpath("data", "transmission.jl"))
 include(joinpath("data", "checks.jl"))
+include(joinpath("data", "wind.jl")) # Investment version: wind station data
+include(joinpath("data", "solar.jl")) # Investment version: solar station data
+include(joinpath("data", "investable.jl")) # Investment version: investable asset data
 include("network.jl")
 
 """
@@ -265,6 +270,8 @@ function getnodes(
     NODES::Vector{Symbol},
     thermal_stations::Dict{Symbol,ThermalStation},
     hydro_stations::Dict{Symbol,HydroStation},
+    wind_stations::Dict{Symbol,WindStation}, # Investment version: wind stations
+    solar_stations::Dict{Symbol,SolarStation}, # Investment version: solar stations
 )
     nodeproperties = Dict{Symbol,NodeHas}()
     for n in NODES
@@ -277,6 +284,17 @@ function getnodes(
         for (name, station) in hydro_stations
             if station.node == n
                 push!(nodeproperties[n].hydro, name)
+            end
+        end
+        # Investment version: also assign wind and solar stations to their nodes
+        for (name, station) in wind_stations
+            if station.node == n
+                push!(nodeproperties[n].wind, name)
+            end
+        end
+        for (name, station) in solar_stations
+            if station.node == n
+                push!(nodeproperties[n].solar, name)
             end
         end
     end
@@ -353,6 +371,13 @@ mutable struct JADEData
     en_tranches::TimeSeries{Dict{Symbol,Dict{Tuple{Symbol,Vector{Symbol}},Vector{Tranche}}}}
     terminal_eqns::Array{LinearEquation}
     sets::Sets
+    investable::Dict{Symbol,Investable} # Investment version: keeping track of all investable assets
+    inv_hydro::Dict{Symbol,Bool} # Investment version: whether each hydro station is investable
+    inv_transmission::Dict{Symbol,Bool} # Investment version: whether each transmission arc is investable
+    wind_stations::Dict{Symbol,WindStation} # Investment version: wind stations 
+    solar_stations::Dict{Symbol,SolarStation} # Investment version: solar stations
+    wind_representation::Dict{Symbol,Any} # Investment version: taking wind capacity into weeks and blocks in subproblems
+    solar_representation::Dict{Symbol,Any} # Investment version: taking solar capacity into weeks and blocks in subproblems
 end
 
 """
@@ -389,6 +414,18 @@ function JADEdata(rundata::RunData)
     hydro_stations, station_arcs = gethydros(filedir("hydro_stations.csv"), sets.NODES)
     sets.HYDROS = collect(keys(hydro_stations))
     sets.STATION_ARCS = collect(keys(station_arcs))
+    inv_hydro = getinvhydro(fildefir("hydro_stations_investable.csv")) # Investment version: whether each hydro station is investable
+
+    # Investment version: also read in wind and solar station data, and assign to nodes
+    @info("Input wind stations")
+    wind_stations = getwinds(filedir("wind_stations.csv"), sets.NODES)
+    sets.WINDS = collect(keys(wind_stations))
+    wind_representation = getwindrepresentation(filedir("wind_representation.csv"))
+
+    @info("Input solar stations")
+    solar_stations = getsolars(filedir("solar_stations.csv"), sets.NODES)
+    sets.SOLARS = collect(keys(solar_stations))
+    solar_representation = getsolarrepresentation(filedir("solar_representation.csv"))
 
     # Prepare reservoir parameters
     reservoirs =
@@ -423,6 +460,11 @@ function JADEdata(rundata::RunData)
             @warn("Arc $a appears in multiple input files.")
         end
     end
+
+    # Investment version: make sets of investable capacities
+    investables =
+        initialiseinvestables(filedir("investments.csv"), length(reservoirs))
+    sets.INVESTABLES = collect(keys(investables))
 
     # Get our inflows, adjusted using DIA
     adjusted_inflows, firstweekinflows = adjustinflows(filedir("inflows.csv"), rundata)
@@ -475,6 +517,9 @@ function JADEdata(rundata::RunData)
         gettransarcs(filedir("transmission.csv"), lineoutage, rundata.losses, sets.BLOCKS)
 
     sets.TRANS_ARCS = collect(keys(transmission))
+
+    # Investment version: read in which transmission arcs are investable
+    inv_transmission = getinvtransmission(filedir("transmission_investable.csv"))
 
     @info("Input outages")
 
@@ -591,7 +636,7 @@ function JADEdata(rundata::RunData)
         inflow_mat,
         station_arcs,
         natural_arcs,
-        getnodes(sets.NODES, thermal_stations, hydro_stations),
+        getnodes(sets.NODES, thermal_stations, hydro_stations, wind_stations, solar_stations),
         spMax,
         transmission,
         loops,
@@ -603,6 +648,13 @@ function JADEdata(rundata::RunData)
         en_tranches,
         getterminalvalue(filedir("terminal_water_value.csv")),
         sets,
+        investables, # Investment version: investable assets
+        inv_hydro, # Investment version: whether each hydro station is investable
+        inv_transmission, # Investment version: whether each transmission arc is investable
+        wind_stations, # Investment version: wind stations
+        solar_stations, # Investment version: solar stations
+        wind_representation, # Investment version: taking wind capacity into weeks and blocks in subproblems
+        solar_representation, # Investment version: taking solar capacity into weeks and blocks in subproblems
     )
 end
 
@@ -631,6 +683,11 @@ function backup_input_files(rundata::RunData)
         "thermal_fuel_costs.csv",
         "thermal_fuel_storage.csv",
         "thermal_fuel_supply.csv",
+        "wind_stations.csv", # Investment version: wind station data
+        "solar_stations.csv", # Investment version: solar station data
+        "investments.csv", # Investment version: investable asset data
+        "hydro_stations_investable.csv", # Investment version: whether each hydro station is investable
+        "transmission_investable.csv", # Investment version: whether each transmission arc is investable
     ]
 
     out_path = joinpath(

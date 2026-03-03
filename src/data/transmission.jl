@@ -24,6 +24,29 @@ struct TransArc
     # reactance::Float64
 end
 
+# Investment version: getting the transmission lines that are investible and assign them to 1
+function getinvtransmission(filename::String)
+    inv_transmission = Dict{NTuple{2,Symbol},Int64}()
+    file = open(filename, "r")
+
+    counter = 0
+
+    for line in readlines(file)
+        
+        counter += 1
+        
+        if counter <= 4 
+            continue
+        end
+
+        fields = split(line, ",")
+        key = (str2sym(fields[1]), str2sym(fields[2]))
+        value = parse(Int64, fields[3])
+        inv_transmission[key] = value
+    end
+    return inv_transmission
+end
+
 function gettransarcs(
     file::String,
     lineoutage::TimeSeries{Dict{Tuple{Symbol,Symbol},Float64}},

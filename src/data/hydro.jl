@@ -262,6 +262,27 @@ function gethydros(filename::String, nodes::Vector{Symbol})
     return hydros, station_arcs
 end
 
+# Investment version: getting the hydro stations that are investible and assign them to 1
+
+function getinvhydro(filename::String)
+    inv_hydro = Dict{Symbol,Int64}()
+    file = open(filename, "r")
+
+    counter = 0
+    for line in readlines(file)
+        counter += 1
+        if counter <= 4 
+            continue
+        end
+        
+        fields = split(line, ",")
+        key = (str2sym(fields[1]), str2sym(fields[2]))
+        value = parse(Int64, fields[3])
+        inv_hydro[key] = value
+    end
+    return inv_hydro
+end
+
 #---------------------------------------------------
 # Prepare inflow-related data
 #---------------------------------------------------

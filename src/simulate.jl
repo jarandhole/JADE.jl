@@ -84,6 +84,9 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
         :lostloadcosts,
         :contingent_storage_cost,
         :carbon_emissions,
+        :new_wind_gen, # Investment version
+        :new_solar_gen, # Investment version
+        :investment_decision, # Investment version
     ]
 
     get_dual = Dict{Symbol,Function}(
@@ -92,6 +95,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
             (sp) ->
                 -d.rundata.scale_objective * JuMP.dual.(sp[:rbalance]) / 1E3 /
                 d.rundata.scale_reservoirs,
+        # condider adding dual of investments
     )
 
     initial_state = Dict(String(k) => v for (k, v) in JADEmodel.sddpm.initial_root_state)
@@ -410,6 +414,9 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
             :total_storage,
             :inflow_year,
             :mwv,
+            :new_wind_gen, # Investment version
+            :new_solar_gen, # Investment version
+            :investment_decision, # Investment version
         ],
     )
 
