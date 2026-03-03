@@ -9,8 +9,9 @@ end
 function getsolars(file::String, nodes::Vector{Symbol})
     solar_stations = Dict{Symbol,SolarStation}()
     parsefile(file, true) do items
-        if items[1] == "header"  # Skip the header line
-            return
+        line_number += 1
+        if line_number == 1
+            return  # Skip the first line
         end
         station = str2sym(items[1])
         if haskey(solar_stations, station)

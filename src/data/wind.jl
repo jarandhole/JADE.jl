@@ -8,8 +8,9 @@ end
 function getwinds(file::String, nodes::Vector{Symbol})
     wind_stations = Dict{Symbol,WindStation}()
     parsefile(file, true) do items
-        if items[1] == "header"  # Skip the header line
-            return
+        line_number += 1
+        if line_number == 1
+            return  # Skip the first line
         end
         station = str2sym(items[1])
         if haskey(wind_stations, station)
