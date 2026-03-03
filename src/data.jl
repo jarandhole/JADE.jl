@@ -414,7 +414,7 @@ function JADEdata(rundata::RunData)
     hydro_stations, station_arcs = gethydros(filedir("hydro_stations.csv"), sets.NODES)
     sets.HYDROS = collect(keys(hydro_stations))
     sets.STATION_ARCS = collect(keys(station_arcs))
-    inv_hydro = getinvhydro(fildir("hydro_stations_investable.csv")) # Investment version: whether each hydro station is investable
+    inv_hydro = getinvhydro(filedir("hydro_stations_investable.csv")) # Investment version: whether each hydro station is investable
 
     # Investment version: also read in wind and solar station data, and assign to nodes
     @info("Input wind stations")
