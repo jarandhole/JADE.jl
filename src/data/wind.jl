@@ -8,10 +8,9 @@ end
 function getwinds(file::String, nodes::Vector{Symbol})
     wind_stations = Dict{Symbol,WindStation}()
     parsefile(file, true) do items
-        #@assert length(items) == 3 # must be 3 columns
-        #if lowercase(items[1]) == "generator"
-        #    return
-        #end
+        if items[1] == "header"  # Skip the header line
+            return
+        end
         station = str2sym(items[1])
         if haskey(wind_stations, station)
             error("Wind Station ($station) already given.")
