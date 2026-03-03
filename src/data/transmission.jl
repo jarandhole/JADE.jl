@@ -28,9 +28,7 @@ end
 function getinvtransmission(filename::String)
     inv_transmission = Dict{NTuple{2,Symbol},Int64}()
     file = open(filename, "r")
-
     counter = 0
-
     for line in readlines(file)
         
         counter += 1
@@ -38,10 +36,10 @@ function getinvtransmission(filename::String)
         if counter <= 4 
             continue
         end
-
         fields = split(line, ",")
-        key = (str2sym(fields[1]), str2sym(fields[2]))
-        value = parse(Int64, fields[3])
+        nodes = split(fields[1], "_TO_")
+        key = (str2sym(nodes[1]), str2sym(nodes[2]))
+        value = parse(Int64, fields[4])
         inv_transmission[key] = value
     end
     return inv_transmission

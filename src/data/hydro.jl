@@ -276,7 +276,7 @@ function getinvhydro(filename::String)
         end
         
         fields = split(line, ",")
-        key = (str2sym(fields[1]), str2sym(fields[2]))
+        key = (str2sym(fields[1]))
         value = parse(Int64, fields[3])
         inv_hydro[key] = value
     end
