@@ -163,7 +163,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             end
             # Stage objective set to cost of investments (ajusted for reinvestment in steady state)
             if d.rundata.steady_state 
-                JuMP.@stageobjective(
+                SDDP.@stageobjective(
                     md,
                     sum(
                         (d.investables[i].capex/(1-d.rundata.discount^(d.investables[i].lifespan_years))) * 
@@ -171,7 +171,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     )
                 )
             else
-                JuMP.@stageobjective(
+                SDDP.@stageobjective(
                     md,
                     sum(
                         d.investables[i].capex * investment_decision[i] for i in s.INVESTABLES
