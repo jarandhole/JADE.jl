@@ -33,22 +33,31 @@ end
 
 #JHO: hard coded this to get rid of JLD2 dependence, but now the dictionary is containing strings, could change here to make week and block Int and value Float64
 function getsolarrepresentation(filename::String)
-    solar_representation = Dict{Symbol, Dict{Tuple{Int, Int, Symbol},Float64}}()
-    df = CSV.read(filename, DataFrame)
+    solar_representation = Dict{Symbol, Dict{Tuple{Int, Int, Symbol}, Float64}}()
 
-    for row in eachrow(df)
-        station = Symbol(row.STATION)
-        year = row.YEAR
-        week = row.WEEK
+    # Open the file and read it line by line
+    open(filename, "r") do file
+        # Read the header line to get the column names
+        header = split(chomp(readline(file)), ",")
+        block_columns = filter(x -> startswith(x, "B"), header)
 
-        # Ensure the station key exists in the dictionary
-        if !haskey(solar_representation, station)
-            solar_representation[station] = Dict{Tuple{Int, Int, Symbol}, Float64}()
-        end
+        # Read each subsequent line
+        for line in eachline(file)
+            row = split(chomp(line), ",")
+            station = Symbol(row[1])
+            year = parse(Int, row[2])
+            week = parse(Int, row[3])
 
-        # Add block values to the dictionary
-        for block in [:B1, :B2, :B3, :B4, :B5]
-            solar_representation[station][(year, week, block)] = row[block]
+            # Ensure the station key exists in the dictionary
+            if !haskey(solar_representation, station)
+                solar_representation[station] = Dict{Tuple{Int, Int, Symbol}, Float64}()
+            end
+
+            # Add block values to the dictionary
+            for (i, block) in enumerate(block_columns)
+                block_symbol = Symbol(block)
+                solar_representation[station][(year, week, block_symbol)] = parse(Float64, row[4 + i])
+            end
         end
     end
     return solar_representation
