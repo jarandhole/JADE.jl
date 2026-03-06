@@ -365,7 +365,7 @@ function write_training_results(
     end
 
     @info("Writing cuts to DOASA-compatible files...")
-    write_DOASA_cuts(sddpm, d, joinpath(data_dir, d.rundata.policy_dir, "Cuts"))
+    #write_DOASA_cuts(sddpm, d, joinpath(data_dir, d.rundata.policy_dir, "Cuts")) #commenting out for now
 
     return nothing
 end
