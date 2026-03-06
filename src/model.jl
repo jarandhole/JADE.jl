@@ -373,12 +373,12 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     # Investment version: defining capacity constraints for wind
                     useWind[m in s.WINDS, bl in s.BLOCKS],
                     new_wind_gen[m, bl] <=
-                    d.wind_representation[string(m)][timenow.week][string(bl)] * invested_capacity[string(m)].in
+                    d.wind_representation[m][(timenow.year,timenow.week, bl)] * invested_capacity[string(m)].in
 
                     # Investment version: defining capacity constraints for solar
                     useSolar[m in s.SOLARS, bl in s.BLOCKS],
                     new_solar_gen[m, bl] <=
-                    d.solar_representation[string(m)][timenow.week][string(bl)] * invested_capacity[string(m)].in
+                    d.solar_representation[m][(timenow.year,timenow.week, bl)] * invested_capacity[string(m)].in
 
                     # Thermal plant capacities
                     useThermal[m in s.THERMALS, bl in s.BLOCKS],

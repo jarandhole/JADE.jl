@@ -32,31 +32,24 @@ end
 
 #JHO: hard coded this to get rid of JLD2 dependence, but now the dictionary is containing strings, could change here to make week and block Int and value Float64
 function getwindrepresentation(filename::String)
-    data = readdlm(filename, ',', String)
-    wind_representation = Dict{Any,Any}()
+    wind_representation = Dict{Symbol, Dict{Tuple{Int, Int, Symbol},Float64}}()
+    df = CSV.read(filename, DataFrame)
 
-    for i in 2:size(data, 1)
-    
-        node = data[i, 1]
-        week = parse(Int, data[i, 2])
-        block = data[i, 3]
-        value = parse(Float64, data[i, 4])
+    for row in eachrow(df)
+        station = Symbol(row.STATION)
+        year = row.YEAR
+        week = row.WEEK
 
-        if haskey(wind_representation, node)
-            subdict = wind_representation[node]
-        else
-            subdict = Dict{Int,Dict{String,Float64}}()
-            wind_representation[node] = subdict
+        # Ensure the station key exists in the dictionary
+        if !haskey(wind_representation, station)
+            wind_representation[station] = Dict{Tuple{Int, Int, Symbol}, Float64}()
         end
 
-        if haskey(subdict, week)
-            subsubdict = subdict[week]
-        else
-            subsubdict = Dict{String,Float64}()
-            subdict[week] = subsubdict
+        # Add block values to the dictionary
+        for block in [:B1, :B2, :B3, :B4, :B5]
+            wind_representation[station][(year, week, block)] = row[block]
         end
-        subsubdict[block] = value
     end
     return wind_representation
 end
-
+    

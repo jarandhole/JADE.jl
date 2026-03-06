@@ -376,8 +376,8 @@ mutable struct JADEData
     inv_transmission::Dict{Symbol,Bool} # Investment version: whether each transmission arc is investable
     wind_stations::Dict{Symbol,WindStation} # Investment version: wind stations 
     solar_stations::Dict{Symbol,SolarStation} # Investment version: solar stations
-    wind_representation::Dict{Symbol,Any} # Investment version: taking wind capacity into weeks and blocks in subproblems
-    solar_representation::Dict{Symbol,Any} # Investment version: taking solar capacity into weeks and blocks in subproblems
+    wind_representation::Dict{Symbol, Dict{Tuple{Int, Int, Symbol},Float64}} # Investment version: taking wind capacity into weeks and blocks in subproblems
+    solar_representation::Dict{Symbol, Dict{Tuple{Int, Int, Symbol},Float64}} # Investment version: taking solar capacity into weeks and blocks in subproblems
 end
 
 """

@@ -33,30 +33,23 @@ end
 
 #JHO: hard coded this to get rid of JLD2 dependence, but now the dictionary is containing strings, could change here to make week and block Int and value Float64
 function getsolarrepresentation(filename::String)
-    data = readdlm(filename, ',', String)
-    solar_representation = Dict{Any,Any}()
+    solar_representation = Dict{Symbol, Dict{Tuple{Int, Int, Symbol},Float64}}()
+    df = CSV.read(filename, DataFrame)
 
-    for i in 2:size(data, 1)
-    
-        node = data[i, 1]
-        week = parse(Int, data[i, 2])
-        block = data[i, 3]
-        value = parse(Float64, data[i, 4])
+    for row in eachrow(df)
+        station = Symbol(row.STATION)
+        year = row.YEAR
+        week = row.WEEK
 
-        if haskey(solar_representation, node)
-            subdict = solar_representation[node]
-        else
-            subdict = Dict{Int,Dict{String,Float64}}()
-            solar_representation[node] = subdict
+        # Ensure the station key exists in the dictionary
+        if !haskey(solar_representation, station)
+            solar_representation[station] = Dict{Tuple{Int, Int, Symbol}, Float64}()
         end
 
-        if haskey(subdict, week)
-            subsubdict = subdict[week]
-        else
-            subsubdict = Dict{String,Float64}()
-            subdict[week] = subsubdict
+        # Add block values to the dictionary
+        for block in [:B1, :B2, :B3, :B4, :B5]
+            solar_representation[station][(year, week, block)] = row[block]
         end
-        subsubdict[block] = value
     end
     return solar_representation
 end
