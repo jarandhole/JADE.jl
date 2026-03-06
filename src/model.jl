@@ -365,7 +365,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     # Hydro plant capacities
                     useHydro[m in s.HYDROS, bl in s.BLOCKS],
                     hydro_disp[m, bl] <=
-                    d.hydro_stations[m].capacity + d.inv_hydro[m] * invested_capacity[string(m)].in - 
+                    d.hydro_stations[m].capacity - #+ d.inv_hydro[m] * invested_capacity[string(m)].in - 
                     sum(d.outage[timenow][(mm, bb)] for (mm, bb) in keys(d.outage[timenow]) if (mm, bb) == (m, bl))
 
                     # Investment version: defining capacity constraints for wind
@@ -389,10 +389,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     # Transmission line capacities
                     transUpper[(n, m) in s.TRANS_ARCS, bl in s.BLOCKS],
                     transflow[(n, m), bl] <=
-                    d.transmission[(n, m)].poscapacity + d.inv_transmission[(n, m)] * invested_capacity[string(m)].in - # Investment version: adding invested capacity to transmission capacity
+                    d.transmission[(n, m)].poscapacity - #+ d.inv_transmission[(n, m)] * invested_capacity[string(m)].in - # Investment version: adding invested capacity to transmission capacity
                     d.transmission[(n, m)].posoutage[timenow][bl]
                     transLower[(n, m) in s.TRANS_ARCS, bl in s.BLOCKS],
-                    -d.transmission[(n, m)].negcapacity - d.inv_transmission[(n, m)] * invested_capacity[string(m)].in + # Investment version: adding invested capacity to transmission capacity, same for both ways so far
+                    -d.transmission[(n, m)].negcapacity + # - d.inv_transmission[(n, m)] * invested_capacity[string(m)].in + # Investment version: adding invested capacity to transmission capacity, same for both ways so far
                     d.transmission[(n, m)].negoutage[timenow][bl] <= transflow[(n, m), bl]
 
                     # Set thermal station capacities to zero if the station has not yet been
