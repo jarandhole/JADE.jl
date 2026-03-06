@@ -275,7 +275,7 @@ function getnodes(
 )
     nodeproperties = Dict{Symbol,NodeHas}()
     for n in NODES
-        nodeproperties[n] = NodeHas(Symbol[], Symbol[])
+        nodeproperties[n] = NodeHas(Symbol[], Symbol[], Symbol[], Symbol[]) # Investment version, adding solar and wind here
         for (name, station) in thermal_stations
             if station.node == n
                 push!(nodeproperties[n].thermal, name)
