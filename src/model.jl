@@ -109,12 +109,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         #------------------------------------------------------------------------
         # Investment version: State variables: invested capacities
         #------------------------------------------------------------------------
-        # Implement the following:
-        # Looping through j in 1:length(d.investable[c].contingent[timenow]) to find minimum
-        # invested_capacity[c in s.INVESTABLE] to find state variables
-        # d.investable[c].max_capacity[timenow] to find upper bound on invested capacity state variable
-        # d.investable[c].initial_capacity[timenow] to starting value
-        # hopefully i in s.INVESTABLE is equal to m in s.WINDS
 
         JuMP.@variable(
             md,
@@ -124,6 +118,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             SDDP.State,
             initial_value = 0
         )
+
+        println(keys(d.transmission))
+        println(keys(d.investables))
+        println(s.TRANS_ARCS)
 
         #------------------------------------------------------------------------
         # Other variables
