@@ -120,7 +120,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             md,
             d.investables[i].initial_capacity <=
             invested_capacity[i in s.INVESTABLES] <=
-            d.investables[i].max_investment[timenow],
+            d.investables[i].max_investment,
             SDDP.State,
             initial_value = 0
         )
