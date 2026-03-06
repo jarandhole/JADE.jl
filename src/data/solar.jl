@@ -56,7 +56,7 @@ function getsolarrepresentation(filename::String)
             # Add block values to the dictionary
             for (i, block) in enumerate(block_columns)
                 block_symbol = Symbol(block)
-                solar_representation[station][(year, week, block_symbol)] = parse(Float64, row[4 + i])
+                solar_representation[station][(year, week, block_symbol)] = parse(Float64, row[3 + i])
             end
         end
     end

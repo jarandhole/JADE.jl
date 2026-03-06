@@ -55,7 +55,7 @@ function getwindrepresentation(filename::String)
             # Add block values to the dictionary
             for (i, block) in enumerate(block_columns)
                 block_symbol = Symbol(block)
-                wind_representation[station][(year, week, block_symbol)] = parse(Float64, row[4 + i])
+                wind_representation[station][(year, week, block_symbol)] = parse(Float64, row[3 + i])
             end
         end
     end
