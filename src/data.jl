@@ -371,7 +371,7 @@ mutable struct JADEData
     en_tranches::TimeSeries{Dict{Symbol,Dict{Tuple{Symbol,Vector{Symbol}},Vector{Tranche}}}}
     terminal_eqns::Array{LinearEquation}
     sets::Sets
-    investable::Dict{Symbol,Investable} # Investment version: keeping track of all investable assets
+    investables::Dict{Symbol,Investable} # Investment version: keeping track of all investable assets
     inv_hydro::Dict{Symbol,Int8} # Investment version: whether each hydro station is investable
     inv_transmission::Dict{NTuple{2,Symbol},Int8} # Investment version: whether each transmission arc is investable
     wind_stations::Dict{Symbol,WindStation} # Investment version: wind stations 
