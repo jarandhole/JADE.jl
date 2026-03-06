@@ -120,7 +120,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             md,
             -sum(
                 d.investables[i].initial_capacity / scale_inv for
-                j in 1:length(d.investables[i])
+                j in 1:length(d.investables)
             ) / scale_inv <=
             invested_capacity[i in s.INVESTABLES] <=
             d.investables[i].max_investment[timenow] / scale_inv,
