@@ -1,5 +1,5 @@
 mutable struct Investable
-    fuel::String
+    fuel::Symbol
     heat_rate::Float64
     max_investment::Float64
     initial_capacity::Float64
@@ -8,7 +8,6 @@ mutable struct Investable
     lifespan_years::Int
     index::Int
 end
-
 
 function initialiseinvestables(
     investables_filename::String,
