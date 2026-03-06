@@ -24,8 +24,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
     nscenarios = d.rundata.nscenarios
     nmargins = length(d.terminal_eqns)
     scale_factor = d.rundata.scale_reservoirs
-    #scale_inv = d.rundata.scale_investments
-    scale_inv = 1
+    #scale_inv = d.rundata.scale_investment_costs
+
     scale_obj = d.rundata.scale_objective
 
     @assert nmargins > 0
@@ -118,12 +118,9 @@ function JADEsddp(d::JADEData, optimizer = nothing)
 
         JuMP.@variable(
             md,
-            -sum(
-                d.investables[i].initial_capacity / scale_inv for
-                j in 1:length(d.investables)
-            ) / scale_inv <=
+            d.investables[i].initial_capacity <=
             invested_capacity[i in s.INVESTABLES] <=
-            d.investables[i].max_investment[timenow] / scale_inv,
+            d.investables[i].max_investment[timenow],
             SDDP.State,
             initial_value = 0
         )
