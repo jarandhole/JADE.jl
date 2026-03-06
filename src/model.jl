@@ -119,13 +119,13 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         JuMP.@variable(
             md,
             -sum(
-                d.investables[i].contingent[timenow][j].level / scale_inv for
-                j in 1:length(d.investables[i].contingent[timenow])
+                d.investables[i].initial_capacity / scale_inv for
+                j in 1:length(d.investables[i])
             ) / scale_inv <=
             invested_capacity[i in s.INVESTABLES] <=
             d.investables[i].max_investment[timenow] / scale_inv,
             SDDP.State,
-            initial_value = d.investables[i].initial_capacity / scale_inv
+            initial_value = 0
         )
 
         #------------------------------------------------------------------------
