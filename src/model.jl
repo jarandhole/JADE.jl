@@ -118,12 +118,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             SDDP.State,
             initial_value = 0
         )
-        println("d.dr_tranches")
-        println(keys(d.dr_tranches))
-        
-        println("d.en_tranches")
-        println(keys(d.en_tranches))
-        
 
         #------------------------------------------------------------------------
         # Other variables
@@ -145,13 +139,23 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 end
             )
             # Invested capacity state variables fixed to investment decision
-            JuMP.@constraints(
-                md,
-                begin
-                    invested_capacity[i in s.INVESTABLES].out ==
-                    invested_capacity[i in s.INVESTABLES].in + investment_decision[i in s.INVESTABLES] 
-                end
-            )
+            
+            for i in s.INVESTABLES
+                JuMP.@constraint(
+                    md,
+                    invested_capacity[i].out ==
+                    invested_capacity[i].in + investment_decision[i]
+                )
+            end
+            
+            
+            #JuMP.@constraints(
+            #    md,
+            #    begin
+            #        invested_capacity[i in s.INVESTABLES].out ==
+            #        invested_capacity[i in s.INVESTABLES].in + investment_decision[i in s.INVESTABLES] 
+            #    end
+            #)
             # Reservoir levels unchanged through investment stage
             for r in s.RESERVOIRS
                 JuMP.@constraint(
