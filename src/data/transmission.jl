@@ -30,16 +30,14 @@ function getinvtransmission(filename::String)
     file = open(filename, "r")
     counter = 0
     for line in readlines(file)
-        
         counter += 1
-        
         if counter <= 4 
             continue
         end
         fields = split(line, ",")
         nodes = split(fields[1], "_TO_")
         key = (str2sym(nodes[1]), str2sym(nodes[2]))
-        value = parse(Int64, fields[4])
+        value = parse(Int64, fields[3])
         inv_transmission[key] = value
     end
     return inv_transmission
