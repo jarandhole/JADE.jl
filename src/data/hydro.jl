@@ -265,7 +265,7 @@ end
 # Investment version: getting the hydro stations that are investible and assign them to 1
 
 function getinvhydro(filename::String)
-    inv_hydro = Dict{Symbol,Int64}()
+    inv_hydro = Dict{Symbol,Int8}()
     file = open(filename, "r")
 
     counter = 0

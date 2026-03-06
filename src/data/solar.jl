@@ -33,7 +33,7 @@ end
 
 #JHO: hard coded this to get rid of JLD2 dependence, but now the dictionary is containing strings, could change here to make week and block Int and value Float64
 function getsolarrepresentation(filename::String)
-    solar_representation = Dict{Symbol, Dict{Tuple{Int, Int, Symbol}, Float64}}()
+    solar_representation = Dict{Symbol, Dict{Tuple{Int16, Int16, Symbol}, Float64}}()
 
     # Open the file and read it line by line
     open(filename, "r") do file
@@ -50,7 +50,7 @@ function getsolarrepresentation(filename::String)
 
             # Ensure the station key exists in the dictionary
             if !haskey(solar_representation, station)
-                solar_representation[station] = Dict{Tuple{Int, Int, Symbol}, Float64}()
+                solar_representation[station] = Dict{Tuple{Int16, Int16, Symbol}, Float64}()
             end
 
             # Add block values to the dictionary

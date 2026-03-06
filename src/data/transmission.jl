@@ -26,7 +26,7 @@ end
 
 # Investment version: getting the transmission lines that are investible and assign them to 1
 function getinvtransmission(filename::String)
-    inv_transmission = Dict{NTuple{2,Symbol},Int64}()
+    inv_transmission = Dict{NTuple{2,Symbol},Int8}()
     file = open(filename, "r")
     counter = 0
     for line in readlines(file)
