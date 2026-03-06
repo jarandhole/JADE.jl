@@ -118,10 +118,12 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             SDDP.State,
             initial_value = 0
         )
-
-        println(keys(d.transmission))
-        println(keys(d.investables))
-        println(s.TRANS_ARCS)
+        println("d.dr_tranches")
+        println(keys(d.dr_tranches))
+        
+        println("d.en_tranches")
+        println(keys(d.en_tranches))
+        
 
         #------------------------------------------------------------------------
         # Other variables
