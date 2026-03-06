@@ -24,7 +24,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
     nscenarios = d.rundata.nscenarios
     nmargins = length(d.terminal_eqns)
     scale_factor = d.rundata.scale_reservoirs
-    scale_inv = d.rundata.scale_investments
+    #scale_inv = d.rundata.scale_investments
+    scale_inv = 1
     scale_obj = d.rundata.scale_objective
 
     @assert nmargins > 0
