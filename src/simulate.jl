@@ -21,7 +21,7 @@ all the corresponding data.
 `parameters` contains all the simulation information, including the number of
 replications, the type of simulation, the hydrological years to sample from, etc.
 """
-function simulate(JADEmodel::JADEModel, parameters::JADESimulation, skip_undefined_variables::Bool = false) # Investment version: added this
+function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefined_variables::Bool = false) # Investment version: added this
     d = JADEmodel.d
     sddpm = JADEmodel.sddpm
     suv = skip_undefined_variables ## Investment version: added this
