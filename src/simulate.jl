@@ -87,7 +87,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
         :carbon_emissions,
         :new_wind_gen, # Investment version
         :new_solar_gen, # Investment version
-        :investment_decision, # Investment version
+        #:investment_decision, # Investment version
     ]
 
     get_dual = Dict{Symbol,Function}(
@@ -421,7 +421,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             :mwv,
             :new_wind_gen, # Investment version
             :new_solar_gen, # Investment version
-            :investment_decision, # Investment version
+            #:investment_decision, # Investment version
         ],
     )
 
