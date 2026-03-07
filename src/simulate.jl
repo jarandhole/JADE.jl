@@ -51,7 +51,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             )
             previous_rundata =
                 load_model_parameters(d.rundata.data_dir, d.rundata.policy_dir)
-            #check_rundata(d.rundata, previous_rundata, :partial) TODO: consider uncommenting
+            check_rundata(d.rundata, previous_rundata, :partial)
             SDDP.read_cuts_from_file(sddpm, cuts_path)
             if JuMP.has_upper_bound(
                 sddpm.nodes[d.rundata.number_of_wks].bellman_function.global_theta.theta,
@@ -144,8 +144,8 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
     end
 
     Random.seed!(parameters.random_seed)
-    wks = d.rundata.number_of_wks * parameters.number_of_cycles
-    lastwk = d.rundata.number_of_wks * parameters.number_of_cycles
+    wks = d.rundata.number_of_wks * parameters.number_of_cycles + 1 # Investment version: added +1
+    lastwk = d.rundata.number_of_wks * parameters.number_of_cycles + 1 # Investment version: added +1 
     if !d.rundata.steady_state
         wks += 1 - parameters.initial_stage
     else
@@ -170,7 +170,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             )
 
             for i in 1:parameters.replications
-                for τ in parameters.initial_stage:lastwk
+                for τ in parameters.initial_stage + 1 :lastwk + 1 # Investment version: added 2* + 1
                     t = τ - parameters.initial_stage + 1
                     for key in keys(results[i][t][:reslevel])
                         results[i][t][:reslevel][key[1]] = SDDP.State(
@@ -209,7 +209,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             results = Vector{Dict{Symbol,Any}}[]
             for i in 1:parameters.replications
                 push!(results, Dict{Symbol,Any}[])
-                for τ in parameters.initial_stage:lastwk
+                for τ in parameters.initial_stage + 1 :lastwk + 1 # Investment version: added 2*+1
                     t = τ - parameters.initial_stage + 1
                     temp = Dict{Symbol,Any}()
                     push!(results[i], temp)
@@ -263,7 +263,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
                 )
                 i = 1
                 extrawks = d.rundata.steady_state ? parameters.initial_stage - 1 : 0
-                for t in parameters.initial_stage:(d.rundata.number_of_wks+extrawks)
+                for t in parameters.initial_stage + 1:(d.rundata.number_of_wks+extrawks) +1 # Investment version: added 2*+1
                     s_inflows = Dict{Symbol,Float64}()
                     for c in d.sets.CATCHMENTS_WITH_INFLOW
                         s_inflows[c] =
@@ -320,7 +320,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
                 i = 1
 
                 for t in
-                    parameters.initial_stage:(d.rundata.number_of_wks+parameters.initial_stage-1)
+                    parameters.initial_stage +1 :(d.rundata.number_of_wks+parameters.initial_stage-1) +1 # Investment version: added 2*+1
                     s_inflows = Dict{Symbol,Float64}()
                     for c in d.sets.CATCHMENTS_WITH_INFLOW
                         s_inflows[c] =
@@ -373,7 +373,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
     end
 
     for i in 1:parameters.replications
-        for τ in parameters.initial_stage:lastwk
+        for τ in parameters.initial_stage +1:lastwk +1 # Investment version: added 2*+1
             t = τ - parameters.initial_stage + 1
             results[i][t][:stage_objective] *= d.rundata.scale_objective
             results[i][t][:bellman_term] *= d.rundata.scale_objective
