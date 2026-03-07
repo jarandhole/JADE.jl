@@ -156,8 +156,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 )
             end
 
-            JuMP.@constraint(md, defineShedding, 1 == 1)
-            JuMP.@constraint(md, rbalance, 1 == 1)
+            JuMP.@constraint(md, defineShedding[n in s.NODES, bl in s.BLOCKS], 1 == 1) # Investment version: dummy constraint
+            JuMP.@constraint(md, rbalance[r in s.RESERVOIRS], 1 == 1) # Investment version: dummy constraint
 
             # Stage objective set to cost of investments (ajusted for reinvestment in steady state)
             if d.rundata.steady_state 
