@@ -21,9 +21,10 @@ all the corresponding data.
 `parameters` contains all the simulation information, including the number of
 replications, the type of simulation, the hydrological years to sample from, etc.
 """
-function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
+function simulate(JADEmodel::JADEModel, parameters::JADESimulation, skip_undefined_variables::Bool = false) # Investment version: added this
     d = JADEmodel.d
     sddpm = JADEmodel.sddpm
+    suv = skip_undefined_variables ## Investment version: added this
 
     check_settings_compatibility(rundata = d.rundata, simulation = parameters)
 
@@ -165,6 +166,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                     terminate_on_dummy_leaf = false,
                 ),
                 incoming_state = initial_state,
+                skip_undefined_variables = suv, # Investment version: added this
             )
 
             for i in 1:parameters.replications
@@ -201,6 +203,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                     terminate_on_dummy_leaf = false,
                 ),
                 incoming_state = initial_state,
+                skip_undefined_variables = suv, # Investment version: added this
             )
 
             results = Vector{Dict{Symbol,Any}}[]
@@ -289,6 +292,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                 sampling_scheme = SDDP.Historical(sample_paths),
                 custom_recorders = get_dual,
                 incoming_state = initial_state,
+                skip_undefined_variables = suv, # Investment version: added this
             )
 
             for sim in sims
@@ -336,6 +340,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                 sampling_scheme = SDDP.Historical(sample_path),
                 custom_recorders = get_dual,
                 incoming_state = initial_state,
+                skip_undefined_variables = suv, # Investment version: added this
             )
         end
 
