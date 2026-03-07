@@ -155,6 +155,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     reslevel[r].out == reslevel[r].in
                 )
             end
+
+            JuMP.@constraint(md, defineShedding, 1 == 1)
+            JuMP.@constraint(md, rbalance, 1 == 1)
+
             # Stage objective set to cost of investments (ajusted for reinvestment in steady state)
             if d.rundata.steady_state 
                 SDDP.@stageobjective(
