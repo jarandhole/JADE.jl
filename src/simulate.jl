@@ -269,7 +269,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
                         s_inflows[c] =
                             inflow_mat[(t+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][i]
                     end
-                    if d.rundata.first_week_known && t == 1
+                    if d.rundata.first_week_known && t == 2 # Investment version: changed from t == 1 to t == 2 to account for the fact that we are now starting at initial_stage, which could be > 1
                         s_inflows[:scenario] = d.rundata.start_yr
                     else
                         s_inflows[:scenario] = years[i]
@@ -380,7 +380,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             for r in d.sets.RESERVOIRS
                 results[i][t][:mwv][r] /= d.reservoirs[r].sp
             end
-            if t == 1
+            if t == 2 # Investment version: changed from t == 1 to t == 2 to account for the fact that we are now starting at initial_stage, which could be > 1
                 results[i][t][:running_cost] = results[i][t][:stage_objective]
             else
                 results[i][t][:running_cost] =
