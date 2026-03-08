@@ -115,15 +115,15 @@ function write_sim_results(
     if !ispath(outdir("NaturalFlows"))
         mkpath(outdir("NaturalFlows"))
     end
-    # TODO!!!
-    #for a in s.NATURAL_ARCS
-    #    # Write results
-    #    adddata(
-    #        outdir(string("NaturalFlows/", string(a[1]), "_", string(a[2]), ".csv")),
-    #    ) do i, j, bl
-    #        return results[i][j][:naturalflows][a, bl]
-    #    end
-    #end
+    
+    for a in s.NATURAL_ARCS
+        # Write results
+        adddata(
+            outdir(string("NaturalFlows/", string(a[1]), "_", string(a[2]), ".csv")),
+        ) do i, j, bl
+            return results[i][j][:naturalflows][a, bl]
+        end
+    end
 
     #------------------------------------
     # Spill flows
