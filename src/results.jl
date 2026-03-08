@@ -56,7 +56,7 @@ function write_sim_results(
             write(f, "simulation, stage, ", header)
             # Data values
             for i in 1:nsims
-                for j in 1:number_of_wks
+                for j in 2:number_of_wks # Investment version: changed from 1 to 2
                     # Get the value from the simulation
                     value = getvalue(i, j)
                     write(f, "\n", string(i), ",", string(j), ",", string(value))
@@ -75,7 +75,7 @@ function write_sim_results(
             end
             # Data values
             for i in 1:nsims
-                for j in 1:number_of_wks
+                for j in 2:number_of_wks # Investment version: changed from 1 to 2
                     write(f, "\n", string(i), ",", string(j))
                     for bl in s.BLOCKS
                         value = getvalue(i, j, bl)
@@ -115,7 +115,7 @@ function write_sim_results(
     if !ispath(outdir("NaturalFlows"))
         mkpath(outdir("NaturalFlows"))
     end
-    
+
     for a in s.NATURAL_ARCS
         # Write results
         adddata(
