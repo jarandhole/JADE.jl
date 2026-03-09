@@ -390,23 +390,23 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
     end
 
 # Investment version: pulled this out of the loop it was for debug
-    #for i in 1:parameters.replications
-    #    for τ in parameters.initial_stage +1:lastwk # Investment version: added +1
-    #        t = τ - parameters.initial_stage + 1
-    #        results[i][t][:total_storage] = 0
-    #        for r in keys(d.reservoirs)
-    #            results[i][t][:total_storage] +=
-    #               results[i][t][:reslevel][r].out * d.reservoirs[r].sp * 1000
-    #        end
-    #    end
-    #end
+    for i in 1:parameters.replications
+        for τ in parameters.initial_stage +1:lastwk # Investment version: added +1
+            t = τ - parameters.initial_stage + 1
+            results[i][t][:total_storage] = 0
+            for r in keys(d.reservoirs)
+                results[i][t][:total_storage] +=
+                   results[i][t][:reslevel][r].out * d.reservoirs[r].sp * 1000
+            end
+        end
+    end
 
     @info(
         "Saving output in " *
         joinpath("Output", d.rundata.data_dir, d.rundata.policy_dir, parameters.sim_dir)
     )
-    write_sim_results(results, d, parameters)
-    output_tidy_results(
+    #write_sim_results(results, d, parameters)
+    #= output_tidy_results(
         results,
         d,
         parameters,
@@ -429,7 +429,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             :new_solar_gen, # Investment version
             #:investment_decision, # Investment version
         ],
-    )
+    ) =#
 
     @info("Done.")
     return results
