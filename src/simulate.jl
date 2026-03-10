@@ -181,7 +181,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
                             d.rundata.scale_reservoirs,
                         )
                     end
-                    if t == 1
+                    if t == 1 # Investment version: added this extra if statement
                         results[i][t][:inflow_year] = 0
                     elseif results[i][t][:noise_term][:scenario] == 0
                         results[i][t][:inflow_year] = d.rundata.start_yr
@@ -213,10 +213,11 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             results = Vector{Dict{Symbol,Any}}[]
             for i in 1:parameters.replications
                 push!(results, Dict{Symbol,Any}[])
-                for τ in parameters.initial_stage +1:lastwk # Investment version: added +1
+                for τ in parameters.initial_stage:lastwk
                     t = τ - parameters.initial_stage + 1
                     temp = Dict{Symbol,Any}()
                     push!(results[i], temp)
+                    # Investment version TODO: will probably need to add some if statements to get around t == 1
                     for sym in
                         vcat(get_primal, [:stage_objective, :bellman_term, :prices, :mwv])
                         if sym == :reslevel
@@ -267,11 +268,15 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
                 )
                 i = 1
                 extrawks = d.rundata.steady_state ? parameters.initial_stage - 1 : 0
-                for t in parameters.initial_stage + 1:(d.rundata.number_of_wks+extrawks)  # Investment version: added +1
+                for t in parameters.initial_stage:(d.rundata.number_of_wks+extrawks)
                     s_inflows = Dict{Symbol,Float64}()
                     for c in d.sets.CATCHMENTS_WITH_INFLOW
-                        s_inflows[c] =
-                            inflow_mat[(t+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][i]
+                        if t == 1 # Investment version: added this if statement
+                            s_inflows[c] = 0
+                        else
+                            s_inflows[c] =
+                                inflow_mat[(t+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][i]
+                        end
                     end
                     if d.rundata.first_week_known && t == 2 # Investment version: changed from t == 1 to t == 2 to account for the fact that we are now starting at initial_stage, which could be > 1
                         s_inflows[:scenario] = d.rundata.start_yr
@@ -407,13 +412,11 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
         end
     end
 
+
     @info(
         "Saving output in " *
         joinpath("Output", d.rundata.data_dir, d.rundata.policy_dir, parameters.sim_dir)
     )
-
-    print(results)
-
 
     write_sim_results(results, d, parameters)
     output_tidy_results(
@@ -437,7 +440,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             :mwv,
             :new_wind_gen, # Investment version
             :new_solar_gen, # Investment version
-            #:investment_decision, # Investment version
+            :investment_decision, # Investment version
         ],
     )
 
