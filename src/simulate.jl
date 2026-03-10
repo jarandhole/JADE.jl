@@ -412,6 +412,19 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
         end
     end
 
+    
+    # Investment version: pulled this out of the loop it was for debug
+    for i in 1:parameters.replications
+        for τ in parameters.initial_stage:lastwk 
+            t = τ - parameters.initial_stage + 1
+            if t != 1
+                for x in keys(d.investables)
+                    results[i][t][:investment_decision][r] == 0
+                end
+            end
+        end
+    end
+
 
     @info(
         "Saving output in " *
