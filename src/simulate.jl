@@ -87,7 +87,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
         :carbon_emissions,
         :new_wind_gen, # Investment version
         :new_solar_gen, # Investment version
-        :investment_decision, # Investment version
+        #:investment_decision, # Investment version
     ]
 
     get_dual = Dict{Symbol,Function}(
@@ -403,12 +403,24 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
         end
     end
 
+    # Investment version: added this for investment_decision
+    for i in 1:parameters.replications
+        for τ in parameters.initial_stage +1:lastwk # Investment version: added +1
+            t = τ - parameters.initial_stage + 1
+            results[i][t][:total_storage] = 0
+            for x in keys(d.investables)
+                results[i][t][:investment_decision][x] * d.reservoirs[r].sp * 1000
+            end
+        end
+    end
+    
+
     @info(
         "Saving output in " *
         joinpath("Output", d.rundata.data_dir, d.rundata.policy_dir, parameters.sim_dir)
     )
-    #write_sim_results(results, d, parameters)
-    #= output_tidy_results(
+    write_sim_results(results, d, parameters)
+    output_tidy_results(
         results,
         d,
         parameters,
@@ -424,14 +436,14 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             :contingent_storage_cost,
             :carbon_emissions,
             :spills,
-            #:total_storage,
+            :total_storage,
             :inflow_year,
             :mwv,
             :new_wind_gen, # Investment version
             :new_solar_gen, # Investment version
             #:investment_decision, # Investment version
         ],
-    ) =#
+    )
 
     @info("Done.")
     return results
