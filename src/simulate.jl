@@ -419,7 +419,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             t = τ - parameters.initial_stage + 1
             if t != 1
                 for x in keys(d.investables)
-                    results[i][t][:investment_decision][r] == 0
+                    results[i][t][:investment_decision][x] == 0
                 end
             end
         end
