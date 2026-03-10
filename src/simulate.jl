@@ -402,7 +402,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             end
         end
     end
-
+#= 
     # Investment version: added this for investment_decision
     for i in 1:parameters.replications
         for τ in parameters.initial_stage +1:lastwk # Investment version: added +1
@@ -413,7 +413,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             end
         end
     end
-    
+ =#    
 
     @info(
         "Saving output in " *
