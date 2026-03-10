@@ -422,7 +422,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
                     results[i][t][:investment_decision] = Dict{Any, Any}()  # Initialize as an empty dictionary
                 end
                 for x in keys(d.investables)
-                    results[i][t][:investment_decision][x] == 0
+                    results[i][t][:investment_decision][x] = 0
                 end
             end
         end
