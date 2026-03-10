@@ -87,7 +87,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
         :carbon_emissions,
         :new_wind_gen, # Investment version
         :new_solar_gen, # Investment version
-        #:investment_decision, # Investment version
+        :investment_decision, # Investment version
     ]
 
     get_dual = Dict{Symbol,Function}(
@@ -412,7 +412,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
         end
     end
 
-    
+#=     
     # Investment version: pulled this out of the loop it was for debug
     for i in 1:parameters.replications
         for τ in parameters.initial_stage:lastwk 
@@ -427,7 +427,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             end
         end
     end
-
+ =#
 
     @info(
         "Saving output in " *
