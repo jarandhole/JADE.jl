@@ -418,6 +418,9 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
         for τ in parameters.initial_stage:lastwk 
             t = τ - parameters.initial_stage + 1
             if t != 1
+                if !haskey(results[i][t], :investment_decision)
+                    results[i][t][:investment_decision] = Dict{Any, Any}()  # Initialize as an empty dictionary
+                end
                 for x in keys(d.investables)
                     results[i][t][:investment_decision][x] == 0
                 end
