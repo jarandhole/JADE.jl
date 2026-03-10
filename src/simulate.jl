@@ -391,29 +391,19 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
         end
     end
 
-# Investment version: pulled this out of the loop it was for debug
+    # Investment version: pulled this out of the loop it was for debug
     for i in 1:parameters.replications
-        for τ in parameters.initial_stage +1:lastwk # Investment version: added +1
+        for τ in parameters.initial_stage:lastwk 
             t = τ - parameters.initial_stage + 1
             results[i][t][:total_storage] = 0
-            for r in keys(d.reservoirs)
-                results[i][t][:total_storage] +=
-                   results[i][t][:reslevel][r].out * d.reservoirs[r].sp * 1000
+            if t != 1
+                for r in keys(d.reservoirs)
+                    results[i][t][:total_storage] +=
+                    results[i][t][:reslevel][r].out * d.reservoirs[r].sp * 1000
+                end
             end
         end
     end
-#= 
-    # Investment version: added this for investment_decision
-    for i in 1:parameters.replications
-        for τ in parameters.initial_stage +1:lastwk # Investment version: added +1
-            t = τ - parameters.initial_stage + 1
-            results[i][t][:total_storage] = 0
-            for x in keys(d.investables)
-                results[i][t][:investment_decision][x] * d.reservoirs[r].sp * 1000
-            end
-        end
-    end
- =#    
 
     @info(
         "Saving output in " *
