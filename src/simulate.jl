@@ -171,23 +171,25 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             )
 
             for i in 1:parameters.replications
-                for τ in parameters.initial_stage + 1 :lastwk # Investment version: added + 1
+                for τ in parameters.initial_stage:lastwk
                     t = τ - parameters.initial_stage + 1
-                    for key in keys(results[i][t][:reslevel])
-                        results[i][t][:reslevel][key[1]] = SDDP.State(
-                            results[i][t][:reslevel][key[1]].in *
-                            d.rundata.scale_reservoirs,
-                            results[i][t][:reslevel][key[1]].out *
-                            d.rundata.scale_reservoirs,
-                        )
-                    end
-                    if results[i][t][:noise_term][:scenario] == 0
-                        results[i][t][:inflow_year] = d.rundata.start_yr
-                    else
-                        results[i][t][:inflow_year] = d.rundata.sample_years[round(
-                            Int,
-                            results[i][t][:noise_term][:scenario],
-                        )]
+                    if t != 1 # Investment version: added this
+                        for key in keys(results[i][t][:reslevel])
+                            results[i][t][:reslevel][key[1]] = SDDP.State(
+                                results[i][t][:reslevel][key[1]].in *
+                                d.rundata.scale_reservoirs,
+                                results[i][t][:reslevel][key[1]].out *
+                                d.rundata.scale_reservoirs,
+                            )
+                        end
+                        if results[i][t][:noise_term][:scenario] == 0
+                            results[i][t][:inflow_year] = d.rundata.start_yr
+                        else
+                            results[i][t][:inflow_year] = d.rundata.sample_years[round(
+                                Int,
+                                results[i][t][:noise_term][:scenario],
+                            )]
+                        end
                     end
                 end
             end
