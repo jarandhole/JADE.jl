@@ -144,8 +144,8 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
     end
 
     Random.seed!(parameters.random_seed)
-    wks = d.rundata.number_of_wks * parameters.number_of_cycles + 1 # Investment version: added +1
-    lastwk = d.rundata.number_of_wks * parameters.number_of_cycles + 1 # Investment version: added +1 
+    wks = d.rundata.number_of_wks * parameters.number_of_cycles + 1 # Investment version: added +1 to get through all stages
+    lastwk = d.rundata.number_of_wks * parameters.number_of_cycles + 1 # Investment version: added +1 to get through all stages
     if !d.rundata.steady_state
         wks += 1 - parameters.initial_stage
     else
@@ -173,23 +173,21 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             for i in 1:parameters.replications
                 for τ in parameters.initial_stage:lastwk
                     t = τ - parameters.initial_stage + 1
-                    if t != 1 # Investment version: added this
-                        for key in keys(results[i][t][:reslevel])
-                            results[i][t][:reslevel][key[1]] = SDDP.State(
-                                results[i][t][:reslevel][key[1]].in *
-                                d.rundata.scale_reservoirs,
-                                results[i][t][:reslevel][key[1]].out *
-                                d.rundata.scale_reservoirs,
-                            )
-                        end
-                        if results[i][t][:noise_term][:scenario] == 0
-                            results[i][t][:inflow_year] = d.rundata.start_yr
-                        else
-                            results[i][t][:inflow_year] = d.rundata.sample_years[round(
-                                Int,
-                                results[i][t][:noise_term][:scenario],
-                            )]
-                        end
+                    for key in keys(results[i][t][:reslevel])
+                        results[i][t][:reslevel][key[1]] = SDDP.State(
+                            results[i][t][:reslevel][key[1]].in *
+                            d.rundata.scale_reservoirs,
+                            results[i][t][:reslevel][key[1]].out *
+                            d.rundata.scale_reservoirs,
+                        )
+                    end
+                    if results[i][t][:noise_term][:scenario] == 0
+                        results[i][t][:inflow_year] = d.rundata.start_yr
+                    else
+                        results[i][t][:inflow_year] = d.rundata.sample_years[round(
+                            Int,
+                            results[i][t][:noise_term][:scenario],
+                        )]
                     end
                 end
             end
@@ -213,7 +211,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
             results = Vector{Dict{Symbol,Any}}[]
             for i in 1:parameters.replications
                 push!(results, Dict{Symbol,Any}[])
-                for τ in parameters.initial_stage + 1 :lastwk # Investment version: added +1
+                for τ in parameters.initial_stage +1:lastwk # Investment version: added +1
                     t = τ - parameters.initial_stage + 1
                     temp = Dict{Symbol,Any}()
                     push!(results[i], temp)
@@ -411,6 +409,10 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
         "Saving output in " *
         joinpath("Output", d.rundata.data_dir, d.rundata.policy_dir, parameters.sim_dir)
     )
+
+    print(results)
+
+
     write_sim_results(results, d, parameters)
     output_tidy_results(
         results,
