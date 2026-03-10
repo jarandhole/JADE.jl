@@ -181,7 +181,9 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation; skip_undefin
                             d.rundata.scale_reservoirs,
                         )
                     end
-                    if results[i][t][:noise_term][:scenario] == 0
+                    if t == 1
+                        results[i][t][:inflow_year] = 0
+                    elseif results[i][t][:noise_term][:scenario] == 0
                         results[i][t][:inflow_year] = d.rundata.start_yr
                     else
                         results[i][t][:inflow_year] = d.rundata.sample_years[round(
