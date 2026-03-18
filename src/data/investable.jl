@@ -1,8 +1,8 @@
 mutable struct Investable
     fuel::Symbol
     heat_rate::Float64
-    max_investment::Float64
     initial_capacity::Float64
+    max_investment::Float64
     capex::Float64
     opex::Float64
     lifespan_years::Int
@@ -21,20 +21,15 @@ function initialiseinvestables(
         stripwhitespace = true,
         comment = "%",
     )
-        # TODO(odow): is CAPACITY optional?
-        row = _validate_and_strip_trailing_comment(
-            row,
-            [:ID, :FUEL, :HEAT_RATE, :max_investment, :capex, :opex, :lifespan_years],
-        )
         investable = str2sym(row.ID)
         if haskey(investables, investable)
             error("Investable asset $(investable) given twice.")
         end
         investables[investable] = Investable(
             str2sym(row.FUEL),  # fuel type for possible thermal investments
-            parse(Float64, row.HEAT_RATE),  # heat rate for possible thermal investments
-            parse(Float64, row.max_investment), 
-            0.0,  # initial capacity
+            parse(Float64, row.HEAT_RATE),  # heat rate for possible thermal investments 
+            parse(Float64. row.min_investment),
+            parse(Float64, row.max_investment),
             parse(Float64, row.capex),
             parse(Float64, row.opex),
             parse(Int, row.lifespan_years),
