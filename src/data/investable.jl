@@ -21,7 +21,7 @@ function initialiseinvestables(
         stripwhitespace = true,
         comment = "%",
     )
-
+#= 
         row = _validate_and_strip_trailing_comment(
             row,
             [
@@ -35,19 +35,20 @@ function initialiseinvestables(
                 :lifespan_years,
             ],
         )
-        investable = str2sym(row.ID)
+ =# 
+        investable = str2sym(row[:ID])  # Access fields using `row[:FieldName]`
         if haskey(investables, investable)
             error("Investable asset $(investable) given twice.")
         end
         investables[investable] = Investable(
-            str2sym(row.FUEL),  # fuel type for possible thermal investments
-            parse(Float64, row.HEAT_RATE),  # heat rate for possible thermal investments 
-            parse(Float64. row.min_investment),
-            parse(Float64, row.max_investment),
-            parse(Float64, row.capex),
-            parse(Float64, row.opex),
-            parse(Int, row.lifespan_years),
-            length_reservoirs + length(investables) + 1, # TODO: check this, just guessing here: index of reservoir, used to create compatible DOASA cut files
+            str2sym(row[:FUEL]),
+            parse(Float64, row[:HEAT_RATE]),
+            parse(Float64, row[:min_investment]),
+            parse(Float64, row[:max_investment]),
+            parse(Float64, row[:capex]),
+            parse(Float64, row[:opex]),
+            parse(Int, row[:lifespan_years]),
+            length_reservoirs + length(investables) + 1,
         )
     end
     return investables
