@@ -112,7 +112,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
 
         JuMP.@variable(
             md,
-            d.investables[i].initial_capacity <=
+            0 <=
             invested_capacity[i in s.INVESTABLES] <=
             d.investables[i].max_investment,
             SDDP.State,
@@ -135,7 +135,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             JuMP.@variables(
                 md,
                 begin
-                    investment_decision[i in s.INVESTABLES] >= 0
+                    d.investables[i].initial_capacity >= investment_decision[i in s.INVESTABLES] >= 0
                 end
             )
             # Invested capacity state variables fixed to investment decision
