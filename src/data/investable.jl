@@ -21,6 +21,20 @@ function initialiseinvestables(
         stripwhitespace = true,
         comment = "%",
     )
+
+        row = _validate_and_strip_trailing_comment(
+            row,
+            [
+                :ID,
+                :FUEL,
+                :HEAT_RATE,
+                :min_investment,
+                :max_investment,
+                :capex,
+                :opex,
+                :lifespan_years,
+            ],
+        )
         investable = str2sym(row.ID)
         if haskey(investables, investable)
             error("Investable asset $(investable) given twice.")
