@@ -1,7 +1,7 @@
 mutable struct Investable
     fuel::Symbol
     heat_rate::Float64
-    initial_capacity::Float64
+    min_investment::Float64
     max_investment::Float64
     capex::Float64
     opex::Float64
