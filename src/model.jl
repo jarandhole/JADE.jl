@@ -132,34 +132,32 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         
         if stage == 1
             # Defining decision variables for each investment option
-            JuMP.@variables(
+            JuMP.@variable(
                 md,
-                begin
-                    investment_decision[i in s.INVESTABLES] >= d.investables[i].min_investment
-                end
+                investment_decision[i in s.INVESTABLES] >= d.investables[i].min_investment
             )
             # Invested capacity state variables fixed to investment decision
-            
-            for i in s.INVESTABLES
-                JuMP.@constraint(
+            JuMP.@constraints(
                     md,
-                    invested_capacity[i].out ==
-                    invested_capacity[i].in + investment_decision[i]
-                )
-            end
+                    begin
+                        idynamic[i in s.INVESTABLES],
+                        invested_capacity[i].out == invested_capacity[i].in + investment_decision[i]  
+                    end
+                    )
             
             # Reservoir levels unchanged through investment stage
-            for r in s.RESERVOIRS
-                JuMP.@constraint(
+            JuMP.@constraints(
                     md,
-                    reslevel[r].out == reslevel[r].in
+                    begin
+                        rbalance[r in s.RESERVOIRS],
+                        reslevel[r].out == reslevel[r].in
+                    end
                 )
-            end
             
             JuMP.@variable(md, dummy_var >= 0)  # A trivial variable for dummy constraints
 
             JuMP.@constraint(md, defineShedding[n in s.NODES, bl in s.BLOCKS], dummy_var == 0) # Investment version: dummy constraint
-            JuMP.@constraint(md, rbalance[r in s.RESERVOIRS], dummy_var == 0) # Investment version: dummy constraint
+            #JuMP.@constraint(md, rbalance[r in s.RESERVOIRS], dummy_var == 0) # Investment version: dummy constraint
 
             # Stage objective set to cost of investments (ajusted for reinvestment in steady state)
             if d.rundata.steady_state 
@@ -183,12 +181,13 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         # Investment version: the rest of the model is defined for stages after investment stage
         #------------------------------------------------------------------------
             # Invested capacity state variables fixed
-            for i in s.INVESTABLES
-                JuMP.@constraint(
+                JuMP.@constraints(
                     md,
-                    invested_capacity[i].out == invested_capacity[i].in
-                )
-            end
+                    begin
+                        idynamic[i in s.INVESTABLES],
+                        invested_capacity[i].out == invested_capacity[i].in    
+                    end
+                    )
         
             JuMP.@variables(
                 md,
