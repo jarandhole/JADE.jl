@@ -464,7 +464,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 if c == :scenario
                     println("Scenario: ", value)
                     println("Scenario year: ", d.rundata.sample_years[value])
-                else
+                end
                 JuMP.fix(inflow[c], value)
             end
         end
