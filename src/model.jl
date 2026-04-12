@@ -462,8 +462,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             push!(inflow_uncertainty, s_inflows)
         end
         SDDP.parameterize(md, inflow_uncertainty) do ϕ # should just build with sample_years
-            y = 0
-            j = 0
+            y = 1991
+            j = 2023
             for (c, value) in ϕ
                 if c == :scenario
                     if value < 1000
