@@ -149,6 +149,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 ] >= 0
                 # To track inflow levels seen
                 inflow[[s.CATCHMENTS_WITH_INFLOW; [:scenario]]]
+                # Demand variable
+                demand[n in s.NODES, bl in s.BLOCKS]
             end
         )
 
@@ -328,7 +330,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 defineShedding[n in s.NODES, bl in s.BLOCKS],
                 sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])) *
                 d.durations[timenow][bl] >=
-                d.demand[timenow][(n, bl)] - d.fixed[timenow][(n, bl)] - supply[n, bl]
+                demand[n, bl] - d.fixed[timenow][(n, bl)] - supply[n, bl] # Fully_stochastic
 
                 energyShedding[(n, sector, loadblocks) in en_keys],
                 sum(
@@ -470,6 +472,11 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     end
                 end
                 JuMP.fix(inflow[c], value)
+            end
+            for n in s.NODES
+                for bl in s.BLOCKS
+                    JuMP.fix(demand[n, bl], d.demand[TimePoint(y, timenow.week)][(n, bl)])
+                end
             end
 
         end
