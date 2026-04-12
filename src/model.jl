@@ -460,18 +460,19 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             push!(inflow_uncertainty, s_inflows)
         end
         SDDP.parameterize(md, inflow_uncertainty) do ϕ
+            y = 0
             for (c, value) in ϕ
                 if c == :scenario
-                    println("Scenario: ", value)
-                    if value <= 1000
-                        println("First week known, using observed inflows")
+                    if y < 1000
+                        y = d.rundata.sample_years[Int(value)]
                     else
-                    println("Scenario year: ", d.rundata.sample_years[Int(value)])
+                        y = Int(value)
+                    end
                 end
                 JuMP.fix(inflow[c], value)
             end
-        end
 
+        end
         JuMP.@constraints(
             md,
             begin
