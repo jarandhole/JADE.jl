@@ -461,6 +461,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         end
         SDDP.parameterize(md, inflow_uncertainty) do ϕ
             for (c, value) in ϕ
+                if c == :scenario
+                    println("Scenario: ", value)
+                    println("Scenario year: ", d.rundata.sample_years[value])
+                else
                 JuMP.fix(inflow[c], value)
             end
         end
