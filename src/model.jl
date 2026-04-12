@@ -463,6 +463,9 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             for (c, value) in ϕ
                 if c == :scenario
                     println("Scenario: ", value)
+                    if value <= 1000
+                        println("First week known, using observed inflows")
+                    else
                     println("Scenario year: ", d.rundata.sample_years[Int(value)])
                 end
                 JuMP.fix(inflow[c], value)
