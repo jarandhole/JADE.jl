@@ -330,13 +330,12 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 # Define shedding: the load shed over all sectors has to equal the shortage. In MWh.
 
                 defineShedding[n in s.NODES, bl in s.BLOCKS],
-                sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])) *
-                durations[bl] >=
-                demand[n, bl] - d.fixed[timenow][(n, bl)] - supply[n, bl] # Fully_stochastic
+                sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl]))*1.0 >= # this is times durations
+                demand[n, bl] - d.fixed[timenow][(n, bl)] - supply[n, bl] # Fully_stochastic -> demand
 
                 energyShedding[(n, sector, loadblocks) in en_keys],
                 sum(
-                    lostload[n, bl, (s, name)] * durations[bl] for
+                    lostload[n, bl, (s, name)] * 1.0 for # this is times duratioins
                     bl in loadblocks,
                     (s, name) in keys(d.dr_tranches[timenow][n][bl]) if s == sector
                 ) <= sum(
@@ -481,6 +480,25 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 
             for bl in s.BLOCKS
                 JuMP.fix(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
+                JuMP.set_normalized_coefficients(
+                    defineShedding[n in s.NODES, bl in s.BLOCKS],
+                    sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])),
+                    d.durations[TimePoint(j, timenow.week)][bl]
+                    )
+
+                JuMP.set_normalized_coefficients(
+                    energyShedding[(n, sector, loadblocks) in en_keys],
+                    lostload[n, bl, (s, name)],
+                    d.durations[TimePoint(j, timenow.week)][bl]
+                )
+
+                JuMP.set_normalized_coefficients(
+                    rbalance[r in s.RESERVOIRS],
+                    (netflow[r, bl]),
+                    d.durations[TimePoint(j, timenow.week)][bl]
+                )
+
+
                 for n in s.NODES
                     JuMP.fix(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
                 end
@@ -494,7 +512,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 rbalance[r in s.RESERVOIRS],
                 (reslevel[r].out - reslevel[r].in) * 1E3 * scale_factor ==
                 SECONDSPERHOUR / 1E3 * (
-                    sum(durations[bl] * (netflow[r, bl]) for bl in s.BLOCKS) + totHours * inflow[r]
+                    sum(1.0 * (netflow[r, bl]) for bl in s.BLOCKS) + totHours * inflow[r] # this is times durations
                 )
 
                 # Conservation for junction points with inflow
