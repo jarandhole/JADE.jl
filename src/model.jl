@@ -468,10 +468,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 if c == :scenario
                     if value < 1000
                         y = d.rundata.sample_years[Int(value)]
-                        j = d.rundata.start_yr - 1 + Int(value)
+                        j = 2023 - 1 + Int(value)
                     else
                         y = Int(value)
-                        j = d.rundata.start_yr - d.rundata.sample_years[1] + Int(value)
+                        j = 2023 - 1991 + Int(value)
                     end
                 end
                 JuMP.fix(inflow[c], value)
