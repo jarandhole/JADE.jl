@@ -539,17 +539,19 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             end
         )
 
-        for bl in s.BLOCKS
-            for r in s.RESERVOIRS
-                println("Accessing rbalance with key: ", (r,))
-                println("Key type: ", typeof((r,)))
-                JuMP.set_normalized_coefficients(
-                    rbalance[(r,)],
-                    netflow[r, bl],
-                    d.durations[TimePoint(j, timenow.week)][bl]
-                )
-            end
-        end
+        println("All keys in rbalance: ", keys(rbalance))
+
+        #for bl in s.BLOCKS
+        #    for r in s.RESERVOIRS
+        #        println("Accessing rbalance with key: ", (r,))
+        #        println("Key type: ", typeof((r,)))
+        #        JuMP.set_normalized_coefficients(
+        #            rbalance[(r,)],
+        #            netflow[r, bl],
+        #            d.durations[TimePoint(j, timenow.week)][bl]
+        #        )
+        #    end
+        #end
 
         for dr in d.rundata.decision_rules
             if timenow.week ∉ dr.weeks
