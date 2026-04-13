@@ -330,7 +330,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 # Define shedding: the load shed over all sectors has to equal the shortage. In MWh.
 
                 defineShedding[n in s.NODES, bl in s.BLOCKS],
-                sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl]))*1.0 >= # this is times durations
+                sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])) * 1.0 >= # this is times durations
                 demand[n, bl] - d.fixed[timenow][(n, bl)] - supply[n, bl] # Fully_stochastic -> demand
 
                 energyShedding[(n, sector, loadblocks) in en_keys],
@@ -465,6 +465,9 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         SDDP.parameterize(md, inflow_uncertainty) do ϕ 
             y = 1991
             j = 2023
+            println("Keys of rbalance: ", keys(rbalance))
+            println("Keys of energyShedding: ", keys(energyShedding))
+            println("Keys of defineShedding: ", keys(defineShedding))
             for (c, value) in ϕ
                 if c == :scenario
                     if value < 1000
@@ -491,11 +494,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 end
 
                 for n in s.NODES
-                    JuMP.set_normalized_coefficients(
-                        energyShedding[(n, sector, loadblocks) in en_keys],
-                        lostload[n, bl, (s, name)],
-                        d.durations[TimePoint(j, timenow.week)][bl]
-                    )
+
                     JuMP.set_normalized_coefficients(
                         defineShedding[n in s.NODES, bl in s.BLOCKS],
                         sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])),
@@ -503,12 +502,17 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                         )
                     
                     JuMP.fix(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
+
+                    JuMP.set_normalized_coefficients(
+                        energyShedding[(n, sector, loadblocks) in en_keys],
+                        lostload[n, bl, (s, name)],
+                        d.durations[TimePoint(j, timenow.week)][bl]
+                    )
                 end
             end
-
         end
-
-        # END OF PARAMETERIZE
+#################################################################
+        # END OF PARAMETERIZE ###############################################################################
 
         JuMP.@constraints(
             md,
