@@ -494,7 +494,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 end
 
                 for n in s.NODES
-
                     JuMP.set_normalized_coefficients(
                         defineShedding[n in s.NODES, bl in s.BLOCKS],
                         sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])),
@@ -502,18 +501,22 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                         )
                     
                     JuMP.fix(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
-
-                    for (s, name) in keys(d.dr_tranches[timenow][n][bl]) if s == sector
-                        JuMP.set_normalized_coefficients(
-                            energyShedding[(n, sector, loadblocks) in en_keys],
-                            lostload[n, bl, (s, name)],
-                            d.durations[TimePoint(j, timenow.week)][bl]
-                        )
+                    
+                    for unique_sectors = unique(key[2] for key in en_keys)
+                        for (s, name) in keys(d.dr_tranches[timenow][n][bl]) if s == unique_sectors
+                            JuMP.set_normalized_coefficients(
+                                energyShedding[(n, sector, loadblocks) in en_keys],
+                                lostload[n, bl, (s, name)],
+                                d.durations[TimePoint(j, timenow.week)][bl]
+                            )
+                        end
+                        end
                     end
-                end
-            end
+                end 
+            end 
         end
-#################################################################
+    
+        #################################################################
         # END OF PARAMETERIZE ###############################################################################
 
         JuMP.@constraints(
@@ -666,6 +669,5 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             SDDP.@stageobjective(md, immediate_cost / scale_obj + terminalcost)
         end
     end
-
     return sddpm
 end
