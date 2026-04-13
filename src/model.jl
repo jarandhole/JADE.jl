@@ -466,7 +466,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             y = 1991
             j = 2023
             println("Keys of rbalance: ", keys(rbalance))
-            println("Keys of energyShedding: ", keys(energyShedding))
+            println("Keys of energyShedding: ", keys(en_keys))
             println("Keys of defineShedding: ", keys(defineShedding))
             for (c, value) in ϕ
                 if c == :scenario
@@ -486,34 +486,50 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 JuMP.fix(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
 
                 for r in s.RESERVOIRS
+                    println("Accessing rbalance with key: ", r)
+                    println("Key type: ", typeof(r))
                     JuMP.set_normalized_coefficients(
-                        rbalance[r in s.RESERVOIRS],
-                        (netflow[r, bl]),
+                        rbalance[(r,)],
+                        netflow[r, bl],
                         d.durations[TimePoint(j, timenow.week)][bl]
                     )
                 end
 
-                for n in s.NODES
-                    JuMP.set_normalized_coefficients(
-                        defineShedding[n in s.NODES, bl in s.BLOCKS],
-                        sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])),
-                        d.durations[TimePoint(j, timenow.week)][bl]
+                for (n, sector, loadblocks) in en_keys
+                    println("Accessing energyShedding with key: ", (n, sector, loadblocks))
+                    println("Key type: ", typeof((n, sector, loadblocks)))
+                    if haskey(energyShedding, (n, sector, loadblocks))
+                        JuMP.set_normalized_coefficients(
+                            energyShedding[(n, sector, loadblocks)],
+                            lostload[n, bl, (s, name)],
+                            d.durations[TimePoint(j, timenow.week)][bl]
                         )
-                    
-                    JuMP.fix(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
-                    
-                    for unique_sectors = unique(key[2] for key in en_keys)
-                        for (s, name) in keys(d.dr_tranches[timenow][n][bl]) if s == unique_sectors
-                            JuMP.set_normalized_coefficients(
-                                energyShedding[(n, sector, loadblocks) in en_keys],
-                                lostload[n, bl, (s, name)],
-                                d.durations[TimePoint(j, timenow.week)][bl]
-                            )
-                        end
-                        end
+                    else
+                        println("Key not found in energyShedding: ", (n, sector, loadblocks))
                     end
-                end 
-            end 
+                end
+            end
+            for n in s.NODES
+                for bl in s.BLOCKS
+                    println("Accessing defineShedding with key: ", (n, bl))
+                    println("Key type: ", typeof((n, bl)))
+                    if haskey(defineShedding, (n, bl))
+                        JuMP.set_normalized_coefficients(
+                            defineShedding[(n, bl)],
+                            sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])),
+                            d.durations[TimePoint(j, timenow.week)][bl]
+                        )
+                    else
+                        println("Key not found in defineShedding: ", (n, bl))
+                    end
+                end
+            end
+
+            for n in s.NODES
+                for bl in s.BLOCKS
+                    JuMP.fix(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
+                end
+            end  
         end
     
         #################################################################
