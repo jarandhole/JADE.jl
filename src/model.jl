@@ -483,8 +483,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 JuMP.fix(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
 
                 for r in s.RESERVOIRS
-                    println("Accessing rbalance with key: ", r)
-                    println("Key type: ", typeof(r))
+                    println("Accessing rbalance with key: ", (r,))
+                    println("Key type: ", typeof((r,)))
                     JuMP.set_normalized_coefficients(
                         rbalance[(r,)],
                         netflow[r, bl],
