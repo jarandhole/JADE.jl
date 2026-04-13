@@ -538,20 +538,23 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 netflow[c, bl] == 0
             end
         )
-
-        println("All keys in rbalance: ", keys(rbalance))
-
-        #for bl in s.BLOCKS
-        #    for r in s.RESERVOIRS
-        #        println("Accessing rbalance with key: ", (r,))
-        #        println("Key type: ", typeof((r,)))
-        #        JuMP.set_normalized_coefficients(
-        #            rbalance[(r,)],
-        #            netflow[r, bl],
-        #            d.durations[TimePoint(j, timenow.week)][bl]
-        #        )
-        #    end
-        #end
+        for r in s.RESERVOIRS
+            println("Accessing rbalance with key: ", (r,))
+            println("Key type: ", typeof((r,)))
+            println("r type: ", typeof(r))
+            if haskey(rbalance, (r,))
+                println("Key exists in rbalance: ", (r,))
+                for bl in s.BLOCKS
+                    JuMP.set_normalized_coefficients(
+                        rbalance[(r,)],
+                        netflow[r, bl],
+                        d.durations[TimePoint(j, timenow.week)][bl]
+                    )
+                end
+            else
+                println("Key not found in rbalance: ", (r,))
+            end
+        end
 
         for dr in d.rundata.decision_rules
             if timenow.week ∉ dr.weeks
