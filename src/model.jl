@@ -490,7 +490,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 for (n, sector, loadblocks) in en_keys
                     println("Accessing energyShedding with key: ", (n, sector, loadblocks))
                     println("Key type: ", typeof((n, sector, loadblocks)))
-                    if haskey(energyShedding, (n, sector, loadblocks))
+                    if (n, sector, loadblocks) in keys(energyShedding)
                         JuMP.set_normalized_coefficients(
                             energyShedding,
                             lostload[n, bl, (s, name)],
@@ -506,7 +506,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 for bl in s.BLOCKS
                     println("Accessing defineShedding with key: ", (n, bl))
                     println("Key type: ", typeof((n, bl)))
-                    if haskey(defineShedding, (n, bl))
+                    if (n, bl) in keys(defineShedding)
                         JuMP.set_normalized_coefficients(
                             defineShedding,
                             sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])),
