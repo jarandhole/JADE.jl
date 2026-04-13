@@ -480,11 +480,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 
             for bl in s.BLOCKS
                 JuMP.fix(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
-                JuMP.set_normalized_coefficients(
-                    defineShedding[n in s.NODES, bl in s.BLOCKS],
-                    sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])),
-                    d.durations[TimePoint(j, timenow.week)][bl]
-                    )
 
                 JuMP.set_normalized_coefficients(
                     energyShedding[(n, sector, loadblocks) in en_keys],
@@ -500,6 +495,13 @@ function JADEsddp(d::JADEData, optimizer = nothing)
 
 
                 for n in s.NODES
+                    JuMP.set_normalized_coefficients(
+                        defineShedding[n in s.NODES, bl in s.BLOCKS],
+                        sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])),
+                        d.durations[TimePoint(j, timenow.week)][bl]
+                        )
+    
+                    
                     JuMP.fix(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
                 end
             end
