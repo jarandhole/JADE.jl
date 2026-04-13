@@ -503,11 +503,13 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     
                     JuMP.fix(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
 
-                    JuMP.set_normalized_coefficients(
-                        energyShedding[(n, sector, loadblocks) in en_keys],
-                        lostload[n, bl, (s, name)],
-                        d.durations[TimePoint(j, timenow.week)][bl]
-                    )
+                    for (s, name) in keys(d.dr_tranches[timenow][n][bl]) if s == sector
+                        JuMP.set_normalized_coefficients(
+                            energyShedding[(n, sector, loadblocks) in en_keys],
+                            lostload[n, bl, (s, name)],
+                            d.durations[TimePoint(j, timenow.week)][bl]
+                        )
+                    end
                 end
             end
         end
