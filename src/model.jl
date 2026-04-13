@@ -462,9 +462,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             end
             push!(inflow_uncertainty, s_inflows)
         end
+        
+        y = 1991
+        j = 2023
         SDDP.parameterize(md, inflow_uncertainty) do ϕ 
-            y = 1991
-            j = 2023
             for (c, value) in ϕ
                 if c == :scenario
                     if value < 1000
@@ -477,21 +478,15 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 end
                 JuMP.fix(inflow[c], value)
             end
-                
+        
             for bl in s.BLOCKS
-                
                 JuMP.fix(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
-
-                for r in s.RESERVOIRS
-                    println("Accessing rbalance with key: ", (r,))
-                    println("Key type: ", typeof((r,)))
-                    JuMP.set_normalized_coefficients(
-                        rbalance[r],
-                        netflow[r, bl],
-                        d.durations[TimePoint(j, timenow.week)][bl]
-                    )
+                for n in s.NODES
+                    JuMP.fix(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
                 end
-
+            end
+            
+            for bl in s.BLOCKS
                 for (n, sector, loadblocks) in en_keys
                     println("Accessing energyShedding with key: ", (n, sector, loadblocks))
                     println("Key type: ", typeof((n, sector, loadblocks)))
@@ -506,6 +501,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     end
                 end
             end
+    
             for n in s.NODES
                 for bl in s.BLOCKS
                     println("Accessing defineShedding with key: ", (n, bl))
@@ -521,16 +517,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     end
                 end
             end
-
-            for n in s.NODES
-                for bl in s.BLOCKS
-                    JuMP.fix(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
-                end
-            end  
         end
-    
-        #################################################################
-        # END OF PARAMETERIZE ###############################################################################
 
         JuMP.@constraints(
             md,
@@ -551,6 +538,18 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 netflow[c, bl] == 0
             end
         )
+
+        for bl in s.BLOCKS
+            for r in s.RESERVOIRS
+                println("Accessing rbalance with key: ", (r,))
+                println("Key type: ", typeof((r,)))
+                JuMP.set_normalized_coefficients(
+                    rbalance[(r,)],
+                    netflow[r, bl],
+                    d.durations[TimePoint(j, timenow.week)][bl]
+                )
+            end
+        end
 
         for dr in d.rundata.decision_rules
             if timenow.week ∉ dr.weeks
