@@ -542,7 +542,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             println("Accessing rbalance with key: ", (r,))
             println("Key type: ", typeof((r,)))
             println("r type: ", typeof(r))
-            if haskey(rbalance, (r,))
+            if (r,) in keys(rbalance)
                 println("Key exists in rbalance: ", (r,))
                 for bl in s.BLOCKS
                     JuMP.set_normalized_coefficients(
