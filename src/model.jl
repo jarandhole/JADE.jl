@@ -465,9 +465,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         SDDP.parameterize(md, inflow_uncertainty) do ϕ 
             y = 1991
             j = 2023
-            println("Keys of rbalance: ", keys(rbalance))
-            println("Keys of energyShedding: ", keys(en_keys))
-            println("Keys of defineShedding: ", keys(defineShedding))
             for (c, value) in ϕ
                 if c == :scenario
                     if value < 1000
@@ -489,7 +486,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     println("Accessing rbalance with key: ", r)
                     println("Key type: ", typeof(r))
                     JuMP.set_normalized_coefficients(
-                        rbalance[(r,)],
+                        rbalance,
                         netflow[r, bl],
                         d.durations[TimePoint(j, timenow.week)][bl]
                     )
@@ -500,7 +497,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     println("Key type: ", typeof((n, sector, loadblocks)))
                     if haskey(energyShedding, (n, sector, loadblocks))
                         JuMP.set_normalized_coefficients(
-                            energyShedding[(n, sector, loadblocks)],
+                            energyShedding,
                             lostload[n, bl, (s, name)],
                             d.durations[TimePoint(j, timenow.week)][bl]
                         )
@@ -515,7 +512,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     println("Key type: ", typeof((n, bl)))
                     if haskey(defineShedding, (n, bl))
                         JuMP.set_normalized_coefficients(
-                            defineShedding[(n, bl)],
+                            defineShedding,
                             sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])),
                             d.durations[TimePoint(j, timenow.week)][bl]
                         )
