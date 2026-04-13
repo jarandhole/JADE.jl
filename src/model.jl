@@ -462,7 +462,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             end
             push!(inflow_uncertainty, s_inflows)
         end
-        SDDP.parameterize(md, inflow_uncertainty) do ϕ # should just build with sample_years
+        SDDP.parameterize(md, inflow_uncertainty) do ϕ 
             y = 1991
             j = 2023
             for (c, value) in ϕ
@@ -479,34 +479,37 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             end
                 
             for bl in s.BLOCKS
+                
                 JuMP.fix(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
 
-                JuMP.set_normalized_coefficients(
-                    energyShedding[(n, sector, loadblocks) in en_keys],
-                    lostload[n, bl, (s, name)],
-                    d.durations[TimePoint(j, timenow.week)][bl]
-                )
-
-                JuMP.set_normalized_coefficients(
-                    rbalance[r in s.RESERVOIRS],
-                    (netflow[r, bl]),
-                    d.durations[TimePoint(j, timenow.week)][bl]
-                )
-
+                for r in s.RESERVOIRS
+                    JuMP.set_normalized_coefficients(
+                        rbalance[r in s.RESERVOIRS],
+                        (netflow[r, bl]),
+                        d.durations[TimePoint(j, timenow.week)][bl]
+                    )
+                end
 
                 for n in s.NODES
+                    JuMP.set_normalized_coefficients(
+                        energyShedding[(n, sector, loadblocks) in en_keys],
+                        lostload[n, bl, (s, name)],
+                        d.durations[TimePoint(j, timenow.week)][bl]
+                    )
                     JuMP.set_normalized_coefficients(
                         defineShedding[n in s.NODES, bl in s.BLOCKS],
                         sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])),
                         d.durations[TimePoint(j, timenow.week)][bl]
                         )
-    
                     
                     JuMP.fix(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
                 end
             end
 
         end
+
+        # END OF PARAMETERIZE
+
         JuMP.@constraints(
             md,
             begin
