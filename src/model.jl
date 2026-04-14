@@ -492,7 +492,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     println("Key type: ", typeof((n, bl)))
                     if (n, bl) in keys(defineShedding)
                         JuMP.set_normalized_coefficients(
-                            defineShedding[(n, bl)],
+                            defineShedding[n, bl],
                             sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenowTimePoint(j, timenow.week)][n][bl])),
                             d.durations[TimePoint(j, timenow.week)][bl]
                         )
