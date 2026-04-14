@@ -544,7 +544,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 netflow[c, bl] == 0
             end
         )
-        for r in s.RESERVOIRS
+        for r in keys(rbalance)
             println("Accessing rbalance with key: ", r)
             println("Key type: ", typeof(r))
             if r in keys(rbalance)
