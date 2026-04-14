@@ -152,6 +152,16 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             end
         )
 
+        JuMP.@parameters(
+            md,
+            begin
+            # Duration of each block in hours
+            #durations[s.BLOCKS] >= 0
+            # Demand at each node and block in MW
+            demand[s.NODES, s.BLOCKS]
+            end
+            )
+
         if d.rundata.losses != :none
             JuMP.@variables(
                 md,
@@ -328,7 +338,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 defineShedding[n in s.NODES, bl in s.BLOCKS],
                 sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])) *
                 d.durations[timenow][bl] >=
-                d.demand[timenow][(n, bl)] - d.fixed[timenow][(n, bl)] - supply[n, bl]
+                demand[n, bl] - d.fixed[timenow][(n, bl)] - supply[n, bl]
 
                 energyShedding[(n, sector, loadblocks) in en_keys],
                 sum(
@@ -476,11 +486,12 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 JuMP.fix(inflow[c], value)
             end
         
-            #for bl in s.BLOCKS
-            #    JuMP.fix(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
-            #    for n in s.NODES
-            #        JuMP.fix(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
-            #    end
+            for bl in s.BLOCKS
+                #JuMP.set_value(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
+                for n in s.NODES
+                    JuMP.set_value(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
+                end
+            end
         end
 
         #SDDP.parameterize(md, inflow_uncertainty) do ϕ
