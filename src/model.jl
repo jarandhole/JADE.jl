@@ -554,7 +554,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             for bl in s.BLOCKS
                 JuMP.set_normalized_coefficients(
                     rbalance[r],
-                    netflow[r[1], bl],  # Use the first element of the tuple
+                    netflow[r, bl],  # Use the first element of the tuple
                     d.durations[TimePoint(j, timenow.week)][bl]
                 )
             end
