@@ -459,11 +459,35 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             end
             push!(inflow_uncertainty, s_inflows)
         end
-        SDDP.parameterize(md, inflow_uncertainty) do ϕ
+
+        y = 1991
+        j = 2023
+        SDDP.parameterize(md, inflow_uncertainty) do ϕ 
             for (c, value) in ϕ
+                if c == :scenario
+                    if value < 1000
+                        y = d.rundata.sample_years[Int(value)]
+                        j = d.rundata.start_yr - 1 + Int(value)
+                    else
+                        y = Int(value)
+                        j = d.rundata.start_yr - d.rundata.sample_years[1] + Int(value)
+                    end
+                end
                 JuMP.fix(inflow[c], value)
             end
+        
+            #for bl in s.BLOCKS
+            #    JuMP.fix(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
+            #    for n in s.NODES
+            #        JuMP.fix(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
+            #    end
         end
+
+        #SDDP.parameterize(md, inflow_uncertainty) do ϕ
+        #    for (c, value) in ϕ
+        #        JuMP.fix(inflow[c], value)
+        #    end
+        #end
 
         JuMP.@constraints(
             md,
