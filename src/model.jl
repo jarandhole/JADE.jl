@@ -158,7 +158,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             # Duration of each block in hours
             #durations[bl in s.BLOCKS] in Parameter()
             # Demand as parameter
-            demand[n in s.NODES, bl in s.BLOCKS] in JuMP.MathOptInterface.Parameter()
+            demand[n in s.NODES, bl in s.BLOCKS] in JuMP.MOI.Parameter(2.0)
             end
             )
 
