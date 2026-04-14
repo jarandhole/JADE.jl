@@ -544,20 +544,19 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 netflow[c, bl] == 0
             end
         )
-        for r in keys(rbalance)
+        for r_key in keys(rbalance)
+            # Extract the actual tuple key from the DenseAxisArrayKey
+            r = r_key[1]  # Extract the tuple (e.g., (:NO1_HYDRO_RESERVOIR_NODE,))
             println("Accessing rbalance with key: ", r)
             println("Key type: ", typeof(r))
-            if r in keys(rbalance)
-                println("Key exists in rbalance: ", r)
-                for bl in s.BLOCKS
-                    JuMP.set_normalized_coefficients(
-                        rbalance[r],
-                        netflow[r, bl],
-                        d.durations[TimePoint(j, timenow.week)][bl]
-                    )
-                end
-            else
-                println("Key not found in rbalance: ", r)
+            
+            # Access rbalance using the extracted tuple key
+            for bl in s.BLOCKS
+                JuMP.set_normalized_coefficients(
+                    rbalance[r],
+                    netflow[r[1], bl],  # Use the first element of the tuple
+                    d.durations[TimePoint(j, timenow.week)][bl]
+                )
             end
         end
 
