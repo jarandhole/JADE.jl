@@ -488,16 +488,21 @@ function JADEsddp(d::JADEData, optimizer = nothing)
 
             for n in s.NODES
                 for bl in s.BLOCKS
-                    println("Accessing defineShedding with key: ", (n, bl))
-                    println("Key type: ", typeof((n, bl)))
-                    if (n, bl) in keys(defineShedding)
+                    println("Accessing defineShedding with indices: ", n, ", ", bl)
+                    println("Index types: ", typeof(n), ", ", typeof(bl))
+            
+                    # Check if the indices exist in defineShedding
+                    if n in axes(defineShedding, 1) && bl in axes(defineShedding, 2)
+                        println("Indices exist in defineShedding: ", n, ", ", bl)
+            
+                        # Set normalized coefficients for the constraint
                         JuMP.set_normalized_coefficients(
-                            defineShedding[n, bl],
+                            defineShedding[n, bl],  # Access the constraint
                             sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenowTimePoint(j, timenow.week)][n][bl])),
                             d.durations[TimePoint(j, timenow.week)][bl]
                         )
                     else
-                        println("Key not found in defineShedding: ", (n, bl))
+                        println("Indices not found in defineShedding: ", n, ", ", bl)
                     end
                 end
             end
