@@ -151,12 +151,12 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 inflow[[s.CATCHMENTS_WITH_INFLOW; [:scenario]]]
                 # Demand variable
                 demand[n in s.NODES, bl in s.BLOCKS]
-                # Durations variable
-                durations[bl in s.BLOCKS]
                 # Netflows now as variable
                 netflow[n in s.CATCHMENTS, bl in s.BLOCKS]
             end
         )
+
+        JuMP.@parameters(md, durations[bl in s.BLOCKS] >= 0)
 
         if d.rundata.losses != :none
             JuMP.@variables(
