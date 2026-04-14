@@ -190,7 +190,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             md,
             begin
                 # Number of hours in a week
-                totHours, sum(durations[bl] for bl in s.BLOCKS)
+                totHours, 365 #sum(durations[bl] for bl in s.BLOCKS)
 
                 # Net transmission to any node: transmission to, minus transmission away
                 transmission[n in s.NODES, bl in s.BLOCKS],
