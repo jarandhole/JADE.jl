@@ -470,10 +470,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 if c == :scenario
                     if value < 1000
                         y = d.rundata.sample_years[Int(value)]
-                        j = 2023 - 1 + Int(value)
+                        j = d.rundata.start_yr - 1 + Int(value)
                     else
                         y = Int(value)
-                        j = 2023 - 1991 + Int(value)
+                        j = d.rundata.start_yr - d.rundata.sample_years[1] + Int(value)
                     end
                 end
                 JuMP.fix(inflow[c], value)
@@ -485,6 +485,22 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     JuMP.fix(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
                 end
             end
+
+            for n in s.NODES
+                for bl in s.BLOCKS
+                    println("Accessing defineShedding with key: ", (n, bl))
+                    println("Key type: ", typeof((n, bl)))
+                    if (n, bl) in keys(defineShedding)
+                        JuMP.set_normalized_coefficients(
+                            defineShedding[(n, bl)],
+                            sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenowTimePoint(j, timenow.week)][n][bl])),
+                            d.durations[TimePoint(j, timenow.week)][bl]
+                        )
+                    else
+                        println("Key not found in defineShedding: ", (n, bl))
+                    end
+                end
+            end
             
             for bl in s.BLOCKS
                 for (n, sector, loadblocks) in en_keys
@@ -492,7 +508,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     println("Key type: ", typeof((n, sector, loadblocks)))
                     if (n, sector, loadblocks) in keys(energyShedding)
                         JuMP.set_normalized_coefficients(
-                            energyShedding,
+                            energyShedding[(n, sector, loadblocks)],
                             lostload[n, bl, (s, name)],
                             d.durations[TimePoint(j, timenow.week)][bl]
                         )
@@ -502,21 +518,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 end
             end
     
-            for n in s.NODES
-                for bl in s.BLOCKS
-                    println("Accessing defineShedding with key: ", (n, bl))
-                    println("Key type: ", typeof((n, bl)))
-                    if (n, bl) in keys(defineShedding)
-                        JuMP.set_normalized_coefficients(
-                            defineShedding,
-                            sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])),
-                            d.durations[TimePoint(j, timenow.week)][bl]
-                        )
-                    else
-                        println("Key not found in defineShedding: ", (n, bl))
-                    end
-                end
-            end
         end
 
         JuMP.@constraints(
