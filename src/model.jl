@@ -530,8 +530,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             begin
                 # Conservation for reservoirs
                 rbalance[r in s.RESERVOIRS],
-                sum(1.0 * (netflow[r, bl]) for bl in s.BLOCKS) == # this is times duration
-                (reslevel[r].out - reslevel[r].in) * 1E3 * scale_factor - (SECONDSPERHOUR/1E3) * totHours * inflow[r] 
+                (reslevel[r].out - reslevel[r].in) * 1E3 * scale_factor - sum(1.0 * (netflow[r, bl]) for bl in s.BLOCKS) == # this is times duration
+                (SECONDSPERHOUR/1E3) * totHours * inflow[r] 
             
                 # Conservation for junction points with inflow
                 jbalance[c in s.CATCHMENTS_WITH_INFLOW, bl in s.BLOCKS; c in s.JUNCTIONS],
