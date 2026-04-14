@@ -487,7 +487,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             end
         
             for bl in s.BLOCKS
-                JuMP.set_value(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
+                JuMP.set_parameter_value(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
                 for n in s.NODES
                     JuMP.set_parameter_value(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
                 end
