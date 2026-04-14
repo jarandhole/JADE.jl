@@ -332,7 +332,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 # Define shedding: the load shed over all sectors has to equal the shortage. In MWh.
 
                 defineShedding[n in s.NODES, bl in s.BLOCKS],
-                sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])) * 1.0 >= # this is times durations
+                sum(1.0 * lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])) >= # this is times durations
                 demand[n, bl] - d.fixed[timenow][(n, bl)] - supply[n, bl] # Fully_stochastic -> demand
 
                 energyShedding[(n, sector, loadblocks) in en_keys],
@@ -498,42 +498,39 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 end
             end
 
-            for n in s.NODES
-                for bl in s.BLOCKS
-                    println("Accessing defineShedding with indices: ", n, ", ", bl)
-                    println("Index types: ", typeof(n), ", ", typeof(bl))
             
-                    # Check if the indices exist in defineShedding
-                    if n in axes(defineShedding, 1) && bl in axes(defineShedding, 2)
-                        println("Indices exist in defineShedding: ", n, ", ", bl)
-            
-                        # Set normalized coefficients for the constraint
-                        JuMP.set_normalized_coefficients(
-                            defineShedding[n, bl],  # Access the constraint
-                            sum(lostload[n, bl, k] for k in keys(d.dr_tranches[TimePoint(j, timenow.week)][n][bl])),
-                            d.durations[TimePoint(j, timenow.week)][bl]
+            for n in s.NODES, bl in s.BLOCKS
+                if n in axes(defineShedding, 1) && bl in axes(defineShedding, 2)
+                    duration = d.durations[TimePoint(j, timenow.week)][bl]
+                    for k in keys(d.dr_tranches[TimePoint(j, timenow.week)][n][bl])
+                        JuMP.set_normalized_coefficient(
+                            defineShedding[n, bl],
+                            lostload[n, bl, k],
+                            duration
                         )
-                    else
-                        println("Indices not found in defineShedding: ", n, ", ", bl)
                     end
                 end
             end
+
             
-            for bl in s.BLOCKS
-                for (n, sector, loadblocks) in en_keys
-                    println("Accessing energyShedding with key: ", (n, sector, loadblocks))
-                    println("Key type: ", typeof((n, sector, loadblocks)))
-                    if (n, sector, loadblocks) in keys(energyShedding)
-                        JuMP.set_normalized_coefficients(
-                            energyShedding[(n, sector, loadblocks)],
-                            lostload[n, bl, (s, name)],
-                            d.durations[TimePoint(j, timenow.week)][bl]
-                        )
-                    else
-                        println("Key not found in energyShedding: ", (n, sector, loadblocks))
+            
+            for (n, sector, loadblocks) in en_keys
+                if (n, sector, loadblocks) in keys(energyShedding)
+                    for bl in loadblocks
+                        duration = d.durations[TimePoint(j, timenow.week)][bl]
+                        for (s, name) in keys(d.dr_tranches[TimePoint(j, timenow.week)][n][bl])
+                            if s == sector
+                                JuMP.set_normalized_coefficient(
+                                    energyShedding[(n, sector, loadblocks)],
+                                    lostload[n, bl, (s, name)],
+                                    duration
+                                )
+                            end
+                        end
                     end
                 end
             end
+
     
         end
 
@@ -555,7 +552,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             end
         )
         
-        
         for r in s.RESERVOIRS
             for bl in s.BLOCKS
                 JuMP.set_normalized_coefficient(
@@ -566,8 +562,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 )
             end
         end
-
-
 
         for dr in d.rundata.decision_rules
             if timenow.week ∉ dr.weeks
