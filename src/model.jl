@@ -531,9 +531,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 # Conservation for reservoirs
                 rbalance[r in s.RESERVOIRS],
                 (reslevel[r].out - reslevel[r].in) * 1E3 * scale_factor ==
-                SECONDSPERHOUR / 1E3 * (
-                    sum(1.0 * (netflow[r, bl]) for bl in s.BLOCKS) + totHours * inflow[r] # this is times durations
-                )
+                sum(1.0 * (netflow[r, bl]) for bl in s.BLOCKS) +
+                SECONDSPERHOUR / 1E3 *(totHours * inflow[r]) # this is times duration
 
                 # Conservation for junction points with inflow
                 jbalance[c in s.CATCHMENTS_WITH_INFLOW, bl in s.BLOCKS; c in s.JUNCTIONS],
@@ -555,7 +554,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 JuMP.set_normalized_coefficients(
                     rbalance[r],
                     netflow[r, bl],  # Use the first element of the tuple
-                    d.durations[TimePoint(j, timenow.week)][bl]
+                    d.durations[TimePoint(j, timenow.week)][bl]/(SECONDSPERHOUR / 1E3) 
                 )
             end
         end
