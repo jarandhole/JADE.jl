@@ -1,7 +1,7 @@
 ## This file should be in a directory containing an Input directory, which has a directory
 ## called <data_dir> containing the JADE input files.
 
-using JADE, JuMP
+using JADE, JuMP, MathOptInterface
 
 ## Choose your solver
 using Gurobi
