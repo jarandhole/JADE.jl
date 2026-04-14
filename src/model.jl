@@ -498,7 +498,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                         # Set normalized coefficients for the constraint
                         JuMP.set_normalized_coefficients(
                             defineShedding[n, bl],  # Access the constraint
-                            sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenowTimePoint(j, timenow.week)][n][bl])),
+                            sum(lostload[n, bl, k] for k in keys(d.dr_tranches[TimePoint(j, timenow.week)][n][bl])),
                             d.durations[TimePoint(j, timenow.week)][bl]
                         )
                     else
@@ -545,20 +545,19 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             end
         )
         for r in s.RESERVOIRS
-            println("Accessing rbalance with key: ", (r,))
-            println("Key type: ", typeof((r,)))
-            println("r type: ", typeof(r))
-            if (r,) in keys(rbalance)
-                println("Key exists in rbalance: ", (r,))
+            println("Accessing rbalance with key: ", r)
+            println("Key type: ", typeof(r))
+            if r in keys(rbalance)
+                println("Key exists in rbalance: ", r)
                 for bl in s.BLOCKS
                     JuMP.set_normalized_coefficients(
-                        rbalance[(r,)],
+                        rbalance[r],
                         netflow[r, bl],
                         d.durations[TimePoint(j, timenow.week)][bl]
                     )
                 end
             else
-                println("Key not found in rbalance: ", (r,))
+                println("Key not found in rbalance: ", r)
             end
         end
 
