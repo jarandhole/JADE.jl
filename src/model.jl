@@ -156,9 +156,9 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             md,
             begin
             # Duration of each block in hours
-            #durations[bl in s.BLOCKS] in Parameter()
+            durations[bl in s.BLOCKS] in JuMP.MOI.Parameter(1.0)
             # Demand as parameter
-            demand[n in s.NODES, bl in s.BLOCKS] in JuMP.MOI.Parameter(2.0)
+            demand[n in s.NODES, bl in s.BLOCKS] in JuMP.MOI.Parameter(1.0)
             end
             )
 
@@ -196,7 +196,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             md,
             begin
                 # Number of hours in a week
-                totHours, sum(d.durations[timenow][bl] for bl in s.BLOCKS)
+                totHours, sum(durations[bl] for bl in s.BLOCKS)
 
                 # Net transmission to any node: transmission to, minus transmission away
                 transmission[n in s.NODES, bl in s.BLOCKS],
@@ -233,7 +233,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                                 a in FLOWUNDER if d.natural_arcs[a].lb_penalty > 0
                             )
                         ) / 1000
-                    ) * d.durations[timenow][bl] for bl in s.BLOCKS
+                    ) * durations[bl] for bl in s.BLOCKS
                 )
 
                 # Flow in minus flow out to any node
@@ -252,7 +252,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             JuMP.@expression(
                 md,
                 supply[n in s.NODES, bl in s.BLOCKS],
-                d.durations[timenow][bl] * (
+                durations[bl] * (
                     transmission[n, bl] - node_losses[n, bl] +
                     sum(thermal_use[m, bl] for m in d.nodehas[n].thermal) +
                     sum(hydro_disp[m, bl] for m in d.nodehas[n].hydro)
@@ -262,7 +262,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             JuMP.@expression(
                 md,
                 supply[n in s.NODES, bl in s.BLOCKS],
-                d.durations[timenow][bl] * (
+                durations[bl] * (
                     transmission[n, bl] +
                     sum(thermal_use[m, bl] for m in d.nodehas[n].thermal) +
                     sum(hydro_disp[m, bl] for m in d.nodehas[n].hydro)
@@ -337,12 +337,12 @@ function JADEsddp(d::JADEData, optimizer = nothing)
 
                 defineShedding[n in s.NODES, bl in s.BLOCKS],
                 sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])) *
-                d.durations[timenow][bl] >=
+                durations[bl] >=
                 demand[n, bl] - d.fixed[timenow][(n, bl)] - supply[n, bl]
 
                 energyShedding[(n, sector, loadblocks) in en_keys],
                 sum(
-                    lostload[n, bl, (s, name)] * d.durations[timenow][bl] for
+                    lostload[n, bl, (s, name)] * durations[bl] for
                     bl in loadblocks,
                     (s, name) in keys(d.dr_tranches[timenow][n][bl]) if s == sector
                 ) <= sum(
@@ -487,7 +487,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             end
         
             for bl in s.BLOCKS
-                #JuMP.set_value(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
+                JuMP.set_value(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
                 for n in s.NODES
                     JuMP.set_parameter_value(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
                 end
@@ -507,7 +507,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 rbalance[r in s.RESERVOIRS],
                 (reslevel[r].out - reslevel[r].in) * 1E3 * scale_factor ==
                 SECONDSPERHOUR / 1E3 * (
-                    sum(d.durations[timenow][bl] * (netflow[r, bl]) for bl in s.BLOCKS) + totHours * inflow[r]
+                    sum(durations[bl] * (netflow[r, bl]) for bl in s.BLOCKS) + totHours * inflow[r]
                 )
 
                 # Conservation for junction points with inflow
@@ -529,13 +529,13 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 LHS =
                     d.hydro_stations[dr.station].sp * sum(
                         releases[d.hydro_stations[dr.station].arc, bl] *
-                        d.durations[timenow][bl] for bl in s.BLOCKS
+                        durations[bl] for bl in s.BLOCKS
                     )
             elseif dr.flowtype == :spill
                 LHS =
                     d.hydro_stations[dr.station].sp * sum(
                         spills[d.hydro_stations[dr.station].arc, bl] *
-                        d.durations[timenow][bl] for bl in s.BLOCKS
+                        durations[bl] for bl in s.BLOCKS
                     )
             elseif dr.flowtype == :combined
                 LHS =
@@ -543,7 +543,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                         (
                             releases[d.hydro_stations[dr.station].arc, bl] +
                             spills[d.hydro_stations[dr.station].arc, bl]
-                        ) * d.durations[timenow][bl] for bl in s.BLOCKS
+                        ) * durations[bl] for bl in s.BLOCKS
                     )
             else
                 error("Invalid flow type: " * string(dr.flowtype))
@@ -576,7 +576,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 sum(
                     lostload[n, bl, k] *
                     d.dr_tranches[timenow][n][bl][k].p *
-                    d.durations[timenow][bl] for
+                    durations[bl] for
                     k in keys(d.dr_tranches[timenow][n][bl])
                 ) for (n, bl) in dr_keys
             ) + sum(
@@ -604,7 +604,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             d.carbon_content[d.thermal_stations[t].fuel] *
             d.thermal_stations[t].heatrate *
             thermal_use[t, bl] *
-            d.durations[timenow][bl]
+            durations[bl]
         )
 
         JuMP.@expression(
@@ -613,12 +613,12 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             sum(
                 (station.omcost + d.fuel_costs[timenow][station.fuel] * station.heatrate) *
                 thermal_use[name, bl] *
-                d.durations[timenow][bl] +
+                durations[bl] +
                 carbon_emissions[name, bl] * d.fuel_costs[timenow][:CO2] for
                 (name, station) in d.thermal_stations, bl in s.BLOCKS
             ) +
             sum(
-                station.omcost * hydro_disp[name, bl] * d.durations[timenow][bl] for
+                station.omcost * hydro_disp[name, bl] * durations[bl] for
                 (name, station) in d.hydro_stations, bl in s.BLOCKS
             ) +
             flowpenalties +
