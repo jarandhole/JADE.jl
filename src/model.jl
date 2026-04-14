@@ -153,6 +153,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 demand[n in s.NODES, bl in s.BLOCKS]
                 # Durations variable
                 durations[bl in s.BLOCKS]
+                # Netflows now as variable
+                netflow[n in s.CATCHMENTS, bl in s.BLOCKS]
             end
         )
 
@@ -231,13 +233,13 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 )
 
                 # Flow in minus flow out to any node
-                netflow[n in s.CATCHMENTS, bl in s.BLOCKS],
-                sum(naturalflows[(i, j), bl] for (i, j) in s.NATURAL_ARCS if j == n) -
-                sum(naturalflows[(i, j), bl] for (i, j) in s.NATURAL_ARCS if i == n) +
-                sum(releases[(i, j), bl] for (i, j) in s.STATION_ARCS if j == n) -
-                sum(releases[(i, j), bl] for (i, j) in s.STATION_ARCS if i == n) +
-                sum(spills[(i, j), bl] for (i, j) in s.STATION_ARCS if j == n) -
-                sum(spills[(i, j), bl] for (i, j) in s.STATION_ARCS if i == n)
+                #netflow[n in s.CATCHMENTS, bl in s.BLOCKS],
+                #sum(naturalflows[(i, j), bl] for (i, j) in s.NATURAL_ARCS if j == n) -
+                #sum(naturalflows[(i, j), bl] for (i, j) in s.NATURAL_ARCS if i == n) +
+                #sum(releases[(i, j), bl] for (i, j) in s.STATION_ARCS if j == n) -
+                #sum(releases[(i, j), bl] for (i, j) in s.STATION_ARCS if i == n) +
+                #sum(spills[(i, j), bl] for (i, j) in s.STATION_ARCS if j == n) -
+                #sum(spills[(i, j), bl] for (i, j) in s.STATION_ARCS if i == n)
             end
         )
 
@@ -342,6 +344,16 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     energyshedding[n, (sector, loadblocks), k] for
                     k in 1:length(d.en_tranches[timenow][n][(sector, loadblocks)])
                 )
+
+                # Making new netflow constraint                
+                netflow_def[n in s.CATCHMENTS, bl in s.BLOCKS],
+                netflow[n, bl] ==
+                    sum(naturalflows[(i, j), bl] for (i, j) in s.NATURAL_ARCS if j == n) -
+                    sum(naturalflows[(i, j), bl] for (i, j) in s.NATURAL_ARCS if i == n) +
+                    sum(releases[(i, j), bl] for (i, j) in s.STATION_ARCS if j == n) -
+                    sum(releases[(i, j), bl] for (i, j) in s.STATION_ARCS if i == n) +
+                    sum(spills[(i, j), bl] for (i, j) in s.STATION_ARCS if j == n) -
+                    sum(spills[(i, j), bl] for (i, j) in s.STATION_ARCS if i == n)
             end
         )
 
