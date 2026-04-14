@@ -530,7 +530,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             begin
                 # Conservation for reservoirs
                 rbalance[r in s.RESERVOIRS],
-                (reslevel[r].out - reslevel[r].in) * 1E3 * scale_factor - sum(1.0 * (netflow[r, bl]) for bl in s.BLOCKS) == # this is times duration
+                (reslevel[r].out - reslevel[r].in) * 1E3 * scale_factor - sum(1.0 * netflow[r, bl] for bl in s.BLOCKS) == # this is times duration
                 (SECONDSPERHOUR/1E3) * totHours * inflow[r] 
             
                 # Conservation for junction points with inflow
@@ -542,21 +542,20 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 netflow[c, bl] == 0
             end
         )
-        for r_key in keys(rbalance)
-            # Extract the actual tuple key from the DenseAxisArrayKey
-            r = r_key[1]  # Extract the tuple (e.g., (:NO1_HYDRO_RESERVOIR_NODE,))
-            println("Accessing rbalance with key: ", r)
-            println("Key type: ", typeof(r))
-            
-            # Access rbalance using the extracted tuple key
+        
+        
+        for r in s.RESERVOIRS
             for bl in s.BLOCKS
-                JuMP.set_normalized_coefficients(
+                JuMP.set_normalized_coefficient(
                     rbalance[r],
-                    netflow[r, bl],  # Use the first element of the tuple
-                    d.durations[TimePoint(j, timenow.week)][bl]/(SECONDSPERHOUR / 1E3) 
+                    netflow[r, bl],
+                    - d.durations[TimePoint(j, timenow.week)][bl] /
+                    (SECONDSPERHOUR / 1e3)
                 )
             end
         end
+
+
 
         for dr in d.rundata.decision_rules
             if timenow.week ∉ dr.weeks
