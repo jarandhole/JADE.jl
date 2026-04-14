@@ -152,7 +152,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             end
         )
 
-        JuMP.@parameters(
+        JuMP.@NLparameters(
             md,
             begin
             # Duration of each block in hours
