@@ -33,10 +33,9 @@ function JADEsddp(d::JADEData, optimizer = nothing)
     s = d.sets
 
     if optimizer == nothing
-        error("No solver specified")
+        error("No solver specified")    
     elseif typeof(optimizer) <: Function
-        d.parallel_optimizer = optimizer
-        optimizer = d.parallel_optimizer()
+        optimizer = optimizer()
     end
 
     #------------------------------------------------------------------------
@@ -57,7 +56,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         graph,
         sense = :Min,
         lower_bound = 0,
-        optimizer = POI.Optimizer(optimizer),
+        optimizer = optimizer,
     ) do md, stage
 
         #-------------------------------------------------------------------------
