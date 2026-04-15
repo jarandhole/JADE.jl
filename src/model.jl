@@ -32,15 +32,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
     LOOPS = d.loops
     s = d.sets
 
-    
-    #if optimizer === nothing
-    #    error("No solver specified")
-    #elseif optimizer isa Function
-    #    # Leave it untouched — SDDP will call it
-    #else
-    #    error("Optimizer must be a zero-argument constructor")
-    #end
-
     if optimizer == nothing
         error("No solver specified")
     elseif typeof(optimizer) <: Function
