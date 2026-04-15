@@ -57,7 +57,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         graph,
         sense = :Min,
         lower_bound = 0,
-        optimizer = optimizer,
+        optimizer = POI.Optimizer(optimizer),
     ) do md, stage
 
         #-------------------------------------------------------------------------
@@ -151,7 +151,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 inflow[[s.CATCHMENTS_WITH_INFLOW; [:scenario]]]
             end
         )
-
+        
         JuMP.@variables(
             md,
             begin
