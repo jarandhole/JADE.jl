@@ -33,22 +33,20 @@ function JADEsddp(d::JADEData, optimizer = nothing)
     s = d.sets
 
     
-    if optimizer === nothing
-        error("No solver specified")
-    elseif optimizer isa Function
-        # Leave it untouched — SDDP will call it
-    else
-        error("Optimizer must be a zero-argument constructor")
-    end
-
-    
-    
-    #if optimizer == nothing
+    #if optimizer === nothing
     #    error("No solver specified")
-    #elseif typeof(optimizer) <: Function
-    #    d.parallel_optimizer = optimizer
-    #    optimizer = d.parallel_optimizer()
+    #elseif optimizer isa Function
+    #    # Leave it untouched — SDDP will call it
+    #else
+    #    error("Optimizer must be a zero-argument constructor")
     #end
+
+    if optimizer == nothing
+        error("No solver specified")
+    elseif typeof(optimizer) <: Function
+        d.parallel_optimizer = optimizer
+        optimizer = d.parallel_optimizer()
+    end
 
     #------------------------------------------------------------------------
     graph = SDDP.LinearGraph(number_of_wks)
