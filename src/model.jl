@@ -35,8 +35,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
     if optimizer == nothing
         error("No solver specified")
     elseif typeof(optimizer) <: Function
-        d.parallel_optimizer = optimizer
-        optimizer = d.parallel_optimizer()
+        #d.parallel_optimizer = optimizer
+        #optimizer = d.parallel_optimizer()
     end
 
     #------------------------------------------------------------------------
