@@ -41,7 +41,7 @@ function optimize_policy!(
     sddpm = JADEmodel.sddpm
     previous_rundata = nothing
 
-    @info("You are now using the customized NVE-JADE")
+    @info("You are now using the customized NVE-JADE with investments")
 
     check_settings_compatibility(rundata = d.rundata, solveoptions = solveoptions)
 
@@ -226,25 +226,32 @@ function optimize_policy!(
                 method = :custom
                 count = count % (length(sequences)) + 1
             end
-            for t in 2:d.rundata.number_of_wks + extra + 1 # Investment version: changed t from 1->2 and added + 1 for investment stage
+            for t in 1:d.rundata.number_of_wks + extra + 1 # Investment version: added + 1 for investment stage
                 s_inflows = Dict{Symbol,Float64}()
-                if method == :montecarlo
+                #INV trying to set inflows in investment stage = 0.0
+                if t == 1
                     for c in d.sets.CATCHMENTS_WITH_INFLOW
-                        s_inflows[c] =
-                            inflow_mat[((t-1)+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][rand_years[(t-1)]] # Investment version: t -> (t-1)
+                        s_inflows[c] = 0.0
                     end
-                elseif method == :custom
-                    for c in d.sets.CATCHMENTS_WITH_INFLOW
-                        if t <= d.rundata.number_of_wks
+                else
+                    if method == :montecarlo
+                        for c in d.sets.CATCHMENTS_WITH_INFLOW
                             s_inflows[c] =
-                                hist_inflow_mat[((t-1)+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][sequences[count][(t-1)]-min_year+1] # Investment version: t -> (t-1)
-                        else
-                            s_inflows[c] =
-                                hist_inflow_mat[((t-1)+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][1] # Investment version: t -> (t-1)
+                                inflow_mat[(t+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][rand_years[t]]
+                        end
+                    elseif method == :custom
+                        for c in d.sets.CATCHMENTS_WITH_INFLOW
+                            if t <= d.rundata.number_of_wks
+                                s_inflows[c] =
+                                    hist_inflow_mat[(t+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][sequences[count][t]-min_year+1]
+                            else
+                                s_inflows[c] =
+                                    hist_inflow_mat[(t+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][1] 
+                            end
                         end
                     end
                 end
-                push!(sample_path, ((t - 2) % d.rundata.number_of_wks + 1, s_inflows)) # Investment version: (t-1) -> (t-2) 
+                push!(sample_path, ((t - 1) % d.rundata.number_of_wks + 1, s_inflows)) 
             end
             push!(sample_paths, sample_path)
         end
