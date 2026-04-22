@@ -226,28 +226,22 @@ function optimize_policy!(
                 method = :custom
                 count = count % (length(sequences)) + 1
             end
-            for t in 1:d.rundata.number_of_wks + extra + 1 # Investment version: added + 1 for investment stage
+            for t in 1:d.rundata.number_of_wks + extra
                 s_inflows = Dict{Symbol,Float64}()
-                #INV trying to set inflows in investment stage = 0.0
-                if t == 1
+            
+                if method == :montecarlo
                     for c in d.sets.CATCHMENTS_WITH_INFLOW
-                        s_inflows[c] = 0.0
+                        s_inflows[c] =
+                            inflow_mat[(t+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][rand_years[t]]
                     end
-                else
-                    if method == :montecarlo
-                        for c in d.sets.CATCHMENTS_WITH_INFLOW
+                elseif method == :custom
+                    for c in d.sets.CATCHMENTS_WITH_INFLOW
+                        if t <= d.rundata.number_of_wks
                             s_inflows[c] =
-                                inflow_mat[(t+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][rand_years[t]]
-                        end
-                    elseif method == :custom
-                        for c in d.sets.CATCHMENTS_WITH_INFLOW
-                            if t <= d.rundata.number_of_wks
-                                s_inflows[c] =
-                                    hist_inflow_mat[(t+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][sequences[count][t]-min_year+1]
-                            else
-                                s_inflows[c] =
-                                    hist_inflow_mat[(t+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][1] 
-                            end
+                                hist_inflow_mat[(t+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][sequences[count][t]-min_year+1]
+                        else
+                            s_inflows[c] =
+                                hist_inflow_mat[(t+d.rundata.start_wk-2)%WEEKSPERYEAR+1][c][1] 
                         end
                     end
                 end
