@@ -217,6 +217,7 @@ function optimize_policy!(
         end
 
         @info("Generating a policy...")
+        println("These are the last changes")
         for i in 1:solveoptions.iterations
             sample_path = Tuple{Int,Dict{Symbol,Float64}}[]
             if sequences == nothing || Random.rand() < solveoptions.fractionMC
