@@ -494,7 +494,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     JuMP.set_parameter_value(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
                 end
             end
-            for t in s.THERMALS
+            for t in s.THERMALS #t er symbol
                 JuMP.set_parameter_value(fuel_costs[t], d.fuel_costs[TimePoint(j, timenow.week)][d.thermal_stations[t].fuel])
             end
         end
@@ -622,7 +622,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             md,
             immediate_cost,
             sum(
-                (station.omcost + fuel_costs[station] * station.heatrate) *
+                (station.omcost + fuel_costs[name] * station.heatrate) *
                 thermal_use[name, bl] *
                 durations[bl] +
                 carbon_emissions[name, bl] * d.fuel_costs[timenow][:CO2] for
