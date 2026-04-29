@@ -10,7 +10,7 @@ function checkfuelcosts(fuelcosts::TimeSeries{Dict{NTuple{2,Symbol},Float64}}, r
     if start_time < fuelcosts.startpoint
         error("No fuel cost data for run start week.")
     end
-    if start_time + rundata.number_of_wks > fuelcosts.startpoint + length(fuelcosts)/5 # TODO: fix for config
+    if start_time + rundata.number_of_wks > fuelcosts.startpoint + length(fuelcosts) # TODO: fix for config
         error("Some weeks are outside range of fuel cost data.")
     end
     return
