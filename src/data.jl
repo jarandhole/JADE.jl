@@ -299,7 +299,7 @@ An object containing all the data required to run the JADE model.
 
 `reservoirs` Dictionary of reservoir properties.
 
-`fuel_costs` Time series of weekly fuel costs. # Changed to vector with fuel cost per block
+`fuel_costs` Time series of weekly fuel costs. # Changed to include blocks
 
 `carbon_content` Carbon content for each fuel type.
 

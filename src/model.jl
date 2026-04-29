@@ -626,7 +626,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 (station.omcost + fuel_costs[name, bl] * station.heatrate) *
                 thermal_use[name, bl] *
                 durations[bl] +
-                carbon_emissions[name, bl] * d.fuel_costs[timenow][:CO2, bl] for
+                carbon_emissions[name, bl] * d.fuel_costs[timenow][(:CO2, Symbol(bl))] for
                 (name, station) in d.thermal_stations, bl in s.BLOCKS
             ) +
             sum(
