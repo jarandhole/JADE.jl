@@ -112,7 +112,7 @@ function getfuelcosts(filename::String)
     row, row_state = iterate(rows)
     fuels = Dict(
         str2sym("$k") => parse(Float64, row[k]) for
-        k in CSV.getnames(row) if !(k in (:Column1, :Column2, :Column3, :CO2, :Power))
+        k in CSV.getnames(row) if !(k in (:Column1, :Column2, :Column3, :Power))
     )
     # Skip YEAR,WEEK,... row
     _, row_state = iterate(rows, row_state)
