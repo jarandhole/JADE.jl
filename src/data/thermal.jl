@@ -102,7 +102,7 @@ Read costs and carbon content for fuels of thermal plant.
     2008,2,4,33.11,5.57,0
 """
 function getfuelcosts(filename::String)
-    start_time, data = nothing, Dict{Symbol,Float64}[]
+    start_time, data = nothing, Dict{(Symbol, Symbol),Float64}[]
     rows = CSV.Rows(
         filename;
         missingstring = ["NA", "na", "default"],
@@ -112,7 +112,7 @@ function getfuelcosts(filename::String)
     row, row_state = iterate(rows)
     fuels = Dict(
         str2sym("$k") => parse(Float64, row[k]) for
-        k in CSV.getnames(row) if !(k in (:Column1, :Column2, :CO2))
+        k in CSV.getnames(row) if !(k in (:Column1, :Column2, :Column3, :CO2, :Power))
     )
     # Skip YEAR,WEEK,... row
     _, row_state = iterate(rows, row_state)
@@ -121,14 +121,14 @@ function getfuelcosts(filename::String)
         time = TimePoint(parse(Int, row.Column1), parse(Int, row.Column2))
         if isempty(data)
             start_time = time
-        elseif time != start_time + length(data)
+        elseif time != start_time + length(data)/5 # Trying to devide for num_blocks, TODO: make it more robust 
             error("Weeks in $filename must be contiguous")
         end
-        d = Dict{Symbol,Float64}(
-            str2sym("$k") => parse(Float64, row[k]) for
-            k in CSV.getnames(row) if !(k in (:Column1, :Column2))
+        d = Dict{(Symbol, Symbol),Float64}(
+            (str2sym("$k"), str2sym(row["BLOCK"])) => parse(Float64, row[k]) for
+            k in CSV.getnames(row) if !(k in (:Column1, :Column2, :Column3))
         )
         push!(data, d)
     end
-    return TimeSeries{Dict{Symbol,Float64}}(start_time, data), fuels
+    return TimeSeries{Dict{(Symbol,Symbol),Float64}}(start_time, data), fuels
 end
