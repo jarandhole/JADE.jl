@@ -573,6 +573,8 @@ function JADEdata(rundata::RunData)
     @info("Input thermal fuel properties")
 
     fuel_costs, carbon_content = getfuelcosts(filedir("thermal_fuel_costs.csv"))
+    
+    println("Fuel costs in timenow = start_yr, 0: ", fuel_costs[TimePoint(rundata.start_yr, 0)])
     println("Fuel costs in timenow = startpoint: ", fuel_costs[TimePoint(rundata.start_yr, rundata.start_wk)])
     println("Fuel costs start point: ", fuel_costs[[TimePoint(2024, 34)]])
     #println("Fuel costs start point: ", fuel_costs.startpoint)
