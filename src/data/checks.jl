@@ -5,16 +5,16 @@
 #  If a copy of the MPL was not distributed with this file, You can obtain one at
 #  http://mozilla.org/MPL/2.0/.
 
-#function checkfuelcosts(fuelcosts::TimeSeries{Dict{(Symbol, Symbol),Float64}}, rundata::RunData)
-#    start_time = TimePoint(rundata.start_yr, rundata.start_wk)
-#    if start_time < fuelcosts.startpoint
-#        error("No fuel cost data for run start week.")
-#    end
-#    if start_time + rundata.number_of_wks > fuelcosts.startpoint + length(fuelcosts)/5 # TODO: fix for config
-#        error("Some weeks are outside range of fuel cost data.")
-#    end
-#    return
-#end
+function checkfuelcosts(fuelcosts::TimeSeries{Dict{NTuple{2,Symbol},Float64}}, rundata::RunData)
+    start_time = TimePoint(rundata.start_yr, rundata.start_wk)
+    if start_time < fuelcosts.startpoint
+        error("No fuel cost data for run start week.")
+    end
+    if start_time + rundata.number_of_wks > fuelcosts.startpoint + length(fuelcosts)/5 # TODO: fix for config
+        error("Some weeks are outside range of fuel cost data.")
+    end
+    return
+end
 
 function checkdemands(
     durations::TimeSeries{Dict{Symbol,Float64}},

@@ -299,7 +299,7 @@ An object containing all the data required to run the JADE model.
 
 `reservoirs` Dictionary of reservoir properties.
 
-`fuel_costs` Time series of weekly fuel costs. # Changed to include blocks
+`fuel_costs` Time series of weekly fuel costs.
 
 `carbon_content` Carbon content for each fuel type.
 
@@ -336,7 +336,7 @@ mutable struct JADEData
     thermal_stations::Dict{Symbol,ThermalStation}
     hydro_stations::Dict{Symbol,HydroStation}
     reservoirs::Dict{Symbol,Reservoir}
-    fuel_costs::TimeSeries{Dict{(Symbol, Symbol),Float64}}
+    fuel_costs::TimeSeries{Dict{NTuple{2,Symbol},Float64}}
     carbon_content::Dict{Symbol,Float64}
     inflow_mat::Vector{Dict{Symbol,Vector{Float64}}}
     station_arcs::Dict{NTuple{2,Symbol},StationArc}
@@ -573,7 +573,7 @@ function JADEdata(rundata::RunData)
     @info("Input thermal fuel properties")
 
     fuel_costs, carbon_content = getfuelcosts(filedir("thermal_fuel_costs.csv"))
-    #checkfuelcosts(fuel_costs, rundata)
+    checkfuelcosts(fuel_costs, rundata)
 
     @info(
         "Recording input data files in " *
