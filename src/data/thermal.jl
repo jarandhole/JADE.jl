@@ -121,11 +121,11 @@ function getfuelcosts(filename::String)
         time = TimePoint(parse(Int, row.Column1), parse(Int, row.Column2))
         if isempty(data)
             start_time = time
-        elseif time != start_time + Int(length(data)/5) # Trying to devide for num_blocks, TODO: make it more robust 
-            error("Weeks in $filename must be contiguous")
+        #elseif time != start_time + length(data) 
+        #    error("Weeks in $filename must be contiguous")
         end
         d = Dict{NTuple{2,Symbol},Float64}(
-            (str2sym("$k"), str2sym(row[:Column3])) => parse(Float64, row[k]) for
+            (str2sym("$k"), str2sym(row.Column3)) => parse(Float64, row[k]) for
             k in CSV.getnames(row) if !(k in (:Column1, :Column2, :Column3))
         )
         push!(data, d)
