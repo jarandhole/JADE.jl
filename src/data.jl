@@ -574,7 +574,7 @@ function JADEdata(rundata::RunData)
 
     fuel_costs, carbon_content = getfuelcosts(filedir("thermal_fuel_costs.csv"))
     println("Fuel costs start point: ", fuel_costs.startpoint)
-    println("Fuel costs: ", fuel_costs)
+    println("CO2 costs: timestep 1 in B1", fuel_costs.data[1][(:CO2, :B1)], " and B2 ", fuel_costs.data[1][(:CO2, :B2)])
     #checkfuelcosts(fuel_costs, rundata)
 
     @info(
