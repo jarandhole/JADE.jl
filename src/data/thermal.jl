@@ -119,7 +119,7 @@ function getfuelcosts(filename::String)
     _, row_state = iterate(rows, row_state)
     start_time = TimePoint(2023,1) # to be updated
     # Outer loop: Iterate over groups of rows (1 group per year-week pair)
-    for i in 1:(52*5)+1
+    for i in 1:(52*30)+1  # TODO: fix 30 and 5 to config
         d = Dict{NTuple{2,Symbol},Float64}()  # Initialize the dictionary for each group
         # Inner loop: Iterate over the 5 load blocks
         for block in 1:5
