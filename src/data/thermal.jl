@@ -117,7 +117,7 @@ function getfuelcosts(filename::String)
         
     # Skip YEAR,WEEK,... row
     _, row_state = iterate(rows, row_state)
-    start_time = TimePoint()
+    start_time = TimePoint(2023,1) # to be updated
     # Outer loop: Iterate over groups of rows (1 group per year-week pair)
     for i in 1:(52*5)+1
         d = Dict{NTuple{2,Symbol},Float64}()  # Initialize the dictionary for each group
