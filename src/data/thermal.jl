@@ -102,7 +102,7 @@ Read costs and carbon content for fuels of thermal plant.
     2008,2,4,33.11,5.57,0
 """
 function getfuelcosts(filename::String)
-    start_time, data = nothing, Dict{(Symbol, Symbol),Float64}[]
+    start_time, data = nothing, Dict{Symbol,Float64}[]
     rows = CSV.Rows(
         filename;
         missingstring = ["NA", "na", "default"],
