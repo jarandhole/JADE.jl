@@ -125,7 +125,7 @@ function getfuelcosts(filename::String)
             error("Weeks in $filename must be contiguous")
         end
         d = Dict{NTuple{2,Symbol},Float64}(
-            (str2sym("$k"), str2sym(row[:BLOCK])) => parse(Float64, row[k]) for
+            (str2sym("$k"), str2sym(row[:Column3])) => parse(Float64, row[k]) for
             k in CSV.getnames(row) if !(k in (:Column1, :Column2, :Column3))
         )
         push!(data, d)
