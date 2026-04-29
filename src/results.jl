@@ -205,7 +205,7 @@ function write_sim_results(
             for bl in s.BLOCKS
                 cost +=
                     results[i][j][:thermal_use][name, bl] *
-                    d.fuel_costs[timenow][station.fuel] *
+                    d.fuel_costs[timenow][(station.fuel, bl)] *
                     station.heatrate *
                     T[timenow][bl]
             end
