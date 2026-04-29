@@ -117,7 +117,7 @@ function getfuelcosts(filename::String)
         
     # Skip YEAR,WEEK,... row
     _, row_state = iterate(rows, row_state)
-
+    start_time = TimePoint()
     # Outer loop: Iterate over groups of rows (1 group per year-week pair)
     for i in 1:(52*5)+1
         d = Dict{NTuple{2,Symbol},Float64}()  # Initialize the dictionary for each group
@@ -127,8 +127,10 @@ function getfuelcosts(filename::String)
             if ret === nothing
                 break  # Exit if there are no more rows
             end
-
             row, row_state = ret
+            if i == 0 && block == 1
+                start_time = TimePoint(parse(Int, row.Column1), parse(Int, row.Column2))
+            end
             # Add elements to the dictionary for the current block
             for k in CSV.getnames(row)
                 if !(k in (:Column1, :Column2, :Column3))
