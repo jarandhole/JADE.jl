@@ -114,6 +114,34 @@ function getfuelcosts(filename::String)
         str2sym("$k") => parse(Float64, row[k]) for
         k in CSV.getnames(row) if !(k in (:Column1, :Column2, :Column3, :Power))
     )
+        
+    # Skip YEAR,WEEK,... row
+    _, row_state = iterate(rows, row_state)
+
+    # Outer loop: Iterate over groups of rows (1 group per year-week pair)
+    for i in 1:((length(rows)-1) ÷ 5)
+        d = Dict{NTuple{2,Symbol},Float64}()  # Initialize the dictionary for each group
+        # Inner loop: Iterate over the 5 load blocks
+        for block in 1:5
+            ret = iterate(rows, row_state)
+            if ret === nothing
+                break  # Exit if there are no more rows
+            end
+
+            row, row_state = ret
+            # Add elements to the dictionary for the current block
+            for k in CSV.getnames(row)
+                if !(k in (:Column1, :Column2, :Column3))
+                    d[(str2sym("$k"), Symbol("B$block"))] = parse(Float64, row[k])
+                end
+            end
+        end
+
+        # Push the dictionary to `data` and clear it for the next group
+        push!(data, d)
+    end
+    
+    """
     # Skip YEAR,WEEK,... row
     _, row_state = iterate(rows, row_state)
     while (ret = iterate(rows, row_state)) !== nothing
@@ -128,7 +156,10 @@ function getfuelcosts(filename::String)
             (str2sym("$k"), str2sym(row.Column3)) => parse(Float64, row[k]) for
             k in CSV.getnames(row) if !(k in (:Column1, :Column2, :Column3))
         )
+        
         push!(data, d)
     end
+
+    """
     return TimeSeries{Dict{NTuple{2,Symbol},Float64}}(start_time, data), fuels
 end
