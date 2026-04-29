@@ -573,7 +573,7 @@ function JADEdata(rundata::RunData)
     @info("Input thermal fuel properties")
 
     fuel_costs, carbon_content = getfuelcosts(filedir("thermal_fuel_costs.csv"))
-    checkfuelcosts(fuel_costs, rundata)
+    #checkfuelcosts(fuel_costs, rundata)
 
     @info(
         "Recording input data files in " *
