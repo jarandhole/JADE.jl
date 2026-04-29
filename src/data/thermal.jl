@@ -141,7 +141,7 @@ function getfuelcosts(filename::String)
         push!(data, d)
     end
     
-    """
+    r"""
     # Skip YEAR,WEEK,... row
     _, row_state = iterate(rows, row_state)
     while (ret = iterate(rows, row_state)) !== nothing
