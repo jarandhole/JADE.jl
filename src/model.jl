@@ -160,7 +160,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             # Demand as parameter
             demand[n in s.NODES, bl in s.BLOCKS] in JuMP.MOI.Parameter(1.0)
             # Fuel cost as parameter
-            fuel_costs[f in s.THERMALS] in JuMP.MOI.Parameter(1.0)
+            fuel_costs[f in s.THERMALS, bl in s.BLOCKS] in JuMP.MOI.Parameter(1.0)
             end
             )
 
@@ -493,10 +493,11 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 for n in s.NODES
                     JuMP.set_parameter_value(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
                 end
+                for t in s.THERMALS #t er symbol
+                    JuMP.set_parameter_value(fuel_costs[t, bl], d.fuel_costs[TimePoint(j, timenow.week)][(d.thermal_stations[t].fuel, Symbol(bl))])
+                end
             end
-            for t in s.THERMALS #t er symbol
-                JuMP.set_parameter_value(fuel_costs[t], d.fuel_costs[TimePoint(j, timenow.week)][d.thermal_stations[t].fuel])
-            end
+
         end
 
         #SDDP.parameterize(md, inflow_uncertainty) do ϕ
@@ -622,10 +623,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             md,
             immediate_cost,
             sum(
-                (station.omcost + fuel_costs[name] * station.heatrate) *
+                (station.omcost + fuel_costs[name, bl] * station.heatrate) *
                 thermal_use[name, bl] *
                 durations[bl] +
-                carbon_emissions[name, bl] * d.fuel_costs[timenow][:CO2] for
+                carbon_emissions[name, bl] * d.fuel_costs[timenow][:CO2, bl] for
                 (name, station) in d.thermal_stations, bl in s.BLOCKS
             ) +
             sum(
