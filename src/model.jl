@@ -284,10 +284,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 # Number of hours in a week
                 totHours, sum(durations[bl] for bl in s.BLOCKS)
 
-                    # Net transmission to any node: transmission to, minus transmission away
-                    transmission[n in s.NODES, bl in s.BLOCKS],
-                    sum(transflow[(i, j), bl] for (i, j) in s.TRANS_ARCS if j == n) -
-                    sum(transflow[(i, j), bl] for (i, j) in s.TRANS_ARCS if i == n)
+                # Net transmission to any node: transmission to, minus transmission away
+                transmission[n in s.NODES, bl in s.BLOCKS],
+                sum(transflow[(i, j), bl] for (i, j) in s.TRANS_ARCS if j == n) -
+                sum(transflow[(i, j), bl] for (i, j) in s.TRANS_ARCS if i == n)
 
                 # Penalties for going over/under flow bounds. Note spMax is in MWh/m^3.
                 flowpenalties,
