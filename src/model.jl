@@ -37,8 +37,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
     if optimizer == nothing
         error("No solver specified")
     elseif typeof(optimizer) <: Function
-        d.parallel_optimizer = optimizer
-        optimizer = d.parallel_optimizer()
+        #d.parallel_optimizer = optimizer
+        #optimizer = d.parallel_optimizer()
     end
 
     #------------------------------------------------------------------------
@@ -235,6 +235,18 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     inflow[[s.CATCHMENTS_WITH_INFLOW; [:scenario]]]
                 end
             )
+        
+            JuMP.@variables(
+                md,
+                begin
+                # Duration of each block in hours
+                durations[bl in s.BLOCKS] in JuMP.MOI.Parameter(1.0)
+                # Demand as parameter
+                demand[n in s.NODES, bl in s.BLOCKS] in JuMP.MOI.Parameter(1.0)
+                # Fuel cost as parameter
+                fuel_costs[f in s.THERMALS, bl in s.BLOCKS] in JuMP.MOI.Parameter(1.0)
+                end
+                )
 
             if d.rundata.losses != :none
                 JuMP.@variables(
@@ -266,49 +278,49 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             # Define handy expressions
             #------------------------------------------------------------------------
 
-            JuMP.@expressions(
-                md,
-                begin
-                    # Number of hours in a week
-                    totHours, sum(d.durations[timenow][bl] for bl in s.BLOCKS)
+        JuMP.@expressions(
+            md,
+            begin
+                # Number of hours in a week
+                totHours, sum(durations[bl] for bl in s.BLOCKS)
 
                     # Net transmission to any node: transmission to, minus transmission away
                     transmission[n in s.NODES, bl in s.BLOCKS],
                     sum(transflow[(i, j), bl] for (i, j) in s.TRANS_ARCS if j == n) -
                     sum(transflow[(i, j), bl] for (i, j) in s.TRANS_ARCS if i == n)
 
-                    # Penalties for going over/under flow bounds. Note spMax is in MWh/m^3.
-                    flowpenalties,
-                    SECONDSPERHOUR * sum(
+                # Penalties for going over/under flow bounds. Note spMax is in MWh/m^3.
+                flowpenalties,
+                SECONDSPERHOUR * sum(
+                    (
+                        sum(
+                            penalty_ub * d.spMax * flowover[a, bl] for
+                            a in FLOWOVER if d.natural_arcs[a].ub_penalty == -1.0
+                        ) +
+                        sum(
+                            penalty_ub * d.spMax * spillover[a, bl] for
+                            a in SPILLOVER if d.station_arcs[a].penalty == -1.0
+                        ) +
+                        sum(
+                            penalty_lb * d.spMax * flowunder[a, bl] for
+                            a in FLOWUNDER if d.natural_arcs[a].lb_penalty == -1.0
+                        ) +
                         (
                             sum(
-                                penalty_ub * d.spMax * flowover[a, bl] for
-                                a in FLOWOVER if d.natural_arcs[a].ub_penalty == -1.0
+                                d.natural_arcs[a].ub_penalty * flowover[a, bl] for
+                                a in FLOWOVER if d.natural_arcs[a].ub_penalty > 0
                             ) +
                             sum(
-                                penalty_ub * d.spMax * spillover[a, bl] for
-                                a in SPILLOVER if d.station_arcs[a].penalty == -1.0
+                                d.station_arcs[a].penalty * spillover[a, bl] for
+                                a in SPILLOVER if d.station_arcs[a].penalty > 0
                             ) +
                             sum(
-                                penalty_lb * d.spMax * flowunder[a, bl] for
-                                a in FLOWUNDER if d.natural_arcs[a].lb_penalty == -1.0
-                            ) +
-                            (
-                                sum(
-                                    d.natural_arcs[a].ub_penalty * flowover[a, bl] for
-                                    a in FLOWOVER if d.natural_arcs[a].ub_penalty > 0
-                                ) +
-                                sum(
-                                    d.station_arcs[a].penalty * spillover[a, bl] for
-                                    a in SPILLOVER if d.station_arcs[a].penalty > 0
-                                ) +
-                                sum(
-                                    d.natural_arcs[a].lb_penalty * flowunder[a, bl] for
-                                    a in FLOWUNDER if d.natural_arcs[a].lb_penalty > 0
-                                )
-                            ) / 1000
-                        ) * d.durations[timenow][bl] for bl in s.BLOCKS
-                    )
+                                d.natural_arcs[a].lb_penalty * flowunder[a, bl] for
+                                a in FLOWUNDER if d.natural_arcs[a].lb_penalty > 0
+                            )
+                        ) / 1000
+                    ) * durations[bl] for bl in s.BLOCKS
+                )
 
                     # Flow in minus flow out to any node
                     netflow[n in s.CATCHMENTS, bl in s.BLOCKS],
@@ -326,7 +338,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 JuMP.@expression(
                     md,
                     supply[n in s.NODES, bl in s.BLOCKS],
-                    d.durations[timenow][bl] * (
+                    durations[bl] * (
                         transmission[n, bl] - node_losses[n, bl] +
                         sum(thermal_use[m, bl] for m in d.nodehas[n].thermal) +
                         sum(hydro_disp[m, bl] for m in d.nodehas[n].hydro) +
@@ -338,7 +350,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 JuMP.@expression(
                     md,
                     supply[n in s.NODES, bl in s.BLOCKS],
-                    d.durations[timenow][bl] * (
+                    durations[bl] * (
                         transmission[n, bl] +
                         sum(thermal_use[m, bl] for m in d.nodehas[n].thermal) +
                         sum(hydro_disp[m, bl] for m in d.nodehas[n].hydro) +
@@ -425,22 +437,22 @@ function JADEsddp(d::JADEData, optimizer = nothing)
 
                     # Define shedding: the load shed over all sectors has to equal the shortage. In MWh.
 
-                    defineShedding[n in s.NODES, bl in s.BLOCKS],
-                    sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])) *
-                    d.durations[timenow][bl] >=
-                    d.demand[timenow][(n, bl)] - d.fixed[timenow][(n, bl)] - supply[n, bl]
+                defineShedding[n in s.NODES, bl in s.BLOCKS],
+                sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])) *
+                durations[bl] >=
+                demand[n, bl] - d.fixed[timenow][(n, bl)] - supply[n, bl]
 
-                    energyShedding[(n, sector, loadblocks) in en_keys],
-                    sum(
-                        lostload[n, bl, (s, name)] * d.durations[timenow][bl] for
-                        bl in loadblocks,
-                        (s, name) in keys(d.dr_tranches[timenow][n][bl]) if s == sector
-                    ) <= sum(
-                        energyshedding[n, (sector, loadblocks), k] for
-                        k in 1:length(d.en_tranches[timenow][n][(sector, loadblocks)])
-                    )
-                end
-            )
+                energyShedding[(n, sector, loadblocks) in en_keys],
+                sum(
+                    lostload[n, bl, (s, name)] * durations[bl] for
+                    bl in loadblocks,
+                    (s, name) in keys(d.dr_tranches[timenow][n][bl]) if s == sector
+                ) <= sum(
+                    energyshedding[n, (sector, loadblocks), k] for
+                    k in 1:length(d.en_tranches[timenow][n][(sector, loadblocks)])
+                )
+            end
+        )
 
             if length(CONTINGENT) != 0
                 JuMP.@constraints(
@@ -559,21 +571,56 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 end
                 push!(inflow_uncertainty, s_inflows)
             end
-            SDDP.parameterize(md, inflow_uncertainty) do ϕ
+
+
+            SDDP.parameterize(md, inflow_uncertainty) do ϕ 
+            y = 1991
+            j = 2023
                 for (c, value) in ϕ
+                if c == :scenario
+                    if value < 1000
+                        y = d.rundata.sample_years[Int(value)]
+                        j = d.rundata.start_yr - 1 + Int(value)
+                    else
+                        y = Int(value)
+                        j = d.rundata.start_yr - d.rundata.sample_years[1] + Int(value)
+                    end
+                end
                     JuMP.fix(inflow[c], value)
+                end
+                for bl in s.BLOCKS
+                JuMP.set_parameter_value(durations[bl], d.durations[TimePoint(j, timenow.week)][bl])
+                for n in s.NODES
+                    JuMP.set_parameter_value(demand[n, bl], d.demand[TimePoint(j, timenow.week)][(n, bl)])
+                end
+                for t in s.THERMALS #t er symbol
+                    JuMP.set_parameter_value(fuel_costs[t, bl], d.fuel_costs[TimePoint(j, timenow.week)][(d.thermal_stations[t].fuel, Symbol(bl))])
                 end
             end
 
-            JuMP.@constraints(
-                md,
-                begin
-                    # Conservation for reservoirs
-                    rbalance[r in s.RESERVOIRS],
-                    (reslevel[r].out - reslevel[r].in) * 1E3 * scale_factor ==
-                    SECONDSPERHOUR / 1E3 * (
-                        sum(d.durations[timenow][bl] * (netflow[r, bl]) for bl in s.BLOCKS) + totHours * inflow[r]
-                    )
+        end
+
+        #SDDP.parameterize(md, inflow_uncertainty) do ϕ
+        #    for (c, value) in ϕ
+        #        JuMP.fix(inflow[c], value)
+        #    end
+        #end
+
+        JuMP.@expression(
+            md,
+            duration_netflow[r in s.CATCHMENTS_WITH_INFLOW, bl in s.BLOCKS],
+            durations[bl] * netflow[r, bl]
+        )
+
+        JuMP.@constraints(
+            md,
+            begin
+                # Conservation for reservoirs
+                rbalance[r in s.RESERVOIRS],
+                (reslevel[r].out - reslevel[r].in) * 1E3 * scale_factor ==
+                SECONDSPERHOUR / 1E3 * (
+                    sum(duration_netflow[r, bl] for bl in s.BLOCKS) + totHours * inflow[r] # TODO: here durations and ==
+                )
 
                     # Conservation for junction points with inflow
                     jbalance[c in s.CATCHMENTS_WITH_INFLOW, bl in s.BLOCKS; c in s.JUNCTIONS],
@@ -585,40 +632,40 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 end
             )
 
-            for dr in d.rundata.decision_rules
-                if timenow.week ∉ dr.weeks
-                    continue
-                end
-                LHS = 0.0
-                if dr.flowtype == :generation
-                    LHS =
-                        d.hydro_stations[dr.station].sp * sum(
-                            releases[d.hydro_stations[dr.station].arc, bl] *
-                            d.durations[timenow][bl] for bl in s.BLOCKS
-                        )
-                elseif dr.flowtype == :spill
-                    LHS =
-                        d.hydro_stations[dr.station].sp * sum(
-                            spills[d.hydro_stations[dr.station].arc, bl] *
-                            d.durations[timenow][bl] for bl in s.BLOCKS
-                        )
-                elseif dr.flowtype == :combined
-                    LHS =
-                        d.hydro_stations[dr.station].sp * sum(
-                            (
-                                releases[d.hydro_stations[dr.station].arc, bl] +
-                                spills[d.hydro_stations[dr.station].arc, bl]
-                            ) * d.durations[timenow][bl] for bl in s.BLOCKS
-                        )
-                else
-                    error("Invalid flow type: " * string(dr.flowtype))
-                end
-                RHS =
-                    dr.intercept +
-                    dr.slope * (
-                        reslevel[dr.reservoir].in * scale_factor +
-                        SECONDSPERHOUR * totHours * inflow[dr.reservoir] / 1E6
+        for dr in d.rundata.decision_rules
+            if timenow.week ∉ dr.weeks
+                continue
+            end
+            LHS = 0.0
+            if dr.flowtype == :generation
+                LHS =
+                    d.hydro_stations[dr.station].sp * sum(
+                        releases[d.hydro_stations[dr.station].arc, bl] *
+                        durations[bl] for bl in s.BLOCKS
                     )
+            elseif dr.flowtype == :spill
+                LHS =
+                    d.hydro_stations[dr.station].sp * sum(
+                        spills[d.hydro_stations[dr.station].arc, bl] *
+                        durations[bl] for bl in s.BLOCKS
+                    )
+            elseif dr.flowtype == :combined
+                LHS =
+                    d.hydro_stations[dr.station].sp * sum(
+                        (
+                            releases[d.hydro_stations[dr.station].arc, bl] +
+                            spills[d.hydro_stations[dr.station].arc, bl]
+                        ) * durations[bl] for bl in s.BLOCKS
+                    )
+            else
+                error("Invalid flow type: " * string(dr.flowtype))
+            end
+            RHS =
+                dr.intercept +
+                dr.slope * (
+                    reslevel[dr.reservoir].in * scale_factor +
+                    SECONDSPERHOUR * totHours * inflow[dr.reservoir] / 1E6
+                )
 
                 if dr.boundtype == :upper
                     JuMP.@constraint(md, LHS <= RHS)
@@ -631,27 +678,27 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 end
             end
 
-            #------------------------------------------------------------------------
-            # Objective-related calculations
-            #------------------------------------------------------------------------
-            JuMP.@expression(
-                md,
-                lostloadcosts,
+        #------------------------------------------------------------------------
+        # Objective-related calculations
+        #------------------------------------------------------------------------
+        JuMP.@expression(
+            md,
+            lostloadcosts,
+            sum(
                 sum(
-                    sum(
-                        lostload[n, bl, k] *
-                        d.dr_tranches[timenow][n][bl][k].p *
-                        d.durations[timenow][bl] for
-                        k in keys(d.dr_tranches[timenow][n][bl])
-                    ) for (n, bl) in dr_keys
-                ) + sum(
-                    sum(
-                        energyshedding[n, (sector, loadblocks), k] *
-                        d.en_tranches[timenow][n][(sector, loadblocks)][k].p for
-                        k in 1:length(d.en_tranches[timenow][n][(sector, loadblocks)])
-                    ) for (n, sector, loadblocks) in en_keys
-                )
+                    lostload[n, bl, k] *
+                    d.dr_tranches[timenow][n][bl][k].p *
+                    durations[bl] for
+                    k in keys(d.dr_tranches[timenow][n][bl])
+                ) for (n, bl) in dr_keys
+            ) + sum(
+                sum(
+                    energyshedding[n, (sector, loadblocks), k] *
+                    d.en_tranches[timenow][n][(sector, loadblocks)][k].p for
+                    k in 1:length(d.en_tranches[timenow][n][(sector, loadblocks)])
+                ) for (n, sector, loadblocks) in en_keys
             )
+        )
 
             JuMP.@expression(
                 md,
@@ -663,33 +710,33 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 )
             )
 
-            JuMP.@expression(
-                md,
-                carbon_emissions[t in s.THERMALS, bl in s.BLOCKS],
-                d.carbon_content[d.thermal_stations[t].fuel] *
-                d.thermal_stations[t].heatrate *
-                thermal_use[t, bl] *
-                d.durations[timenow][bl]
-            )
+        JuMP.@expression(
+            md,
+            carbon_emissions[t in s.THERMALS, bl in s.BLOCKS],
+            d.carbon_content[d.thermal_stations[t].fuel] *
+            d.thermal_stations[t].heatrate *
+            thermal_use[t, bl] *
+            durations[bl]
+        )
 
-            JuMP.@expression(
-                md,
-                immediate_cost,
-                sum(
-                    (station.omcost + d.fuel_costs[timenow][station.fuel] * station.heatrate) *
-                    thermal_use[name, bl] *
-                    d.durations[timenow][bl] +
-                    carbon_emissions[name, bl] * d.fuel_costs[timenow][:CO2] for
-                    (name, station) in d.thermal_stations, bl in s.BLOCKS
-                ) +
-                sum(
-                    station.omcost * hydro_disp[name, bl] * d.durations[timenow][bl] for
-                    (name, station) in d.hydro_stations, bl in s.BLOCKS
-                ) +
-                flowpenalties +
-                lostloadcosts +
-                contingent_storage_cost
-            )
+        JuMP.@expression(
+            md,
+            immediate_cost,
+            sum(
+                (station.omcost + fuel_costs[name, bl] * station.heatrate) *
+                thermal_use[name, bl] *
+                durations[bl] +
+                carbon_emissions[name, bl] * d.fuel_costs[timenow][(:CO2, Symbol(bl))] for
+                (name, station) in d.thermal_stations, bl in s.BLOCKS
+            ) +
+            sum(
+                station.omcost * hydro_disp[name, bl] * durations[bl] for
+                (name, station) in d.hydro_stations, bl in s.BLOCKS
+            ) +
+            flowpenalties +
+            lostloadcosts +
+            contingent_storage_cost
+        )
 
             if stage < number_of_wks + 1 || !d.rundata.use_terminal_mwvs # Investment version: adding + 1 on number_of_wks here to get to final stage
                 # Stage cost function not including terminal water value

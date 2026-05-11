@@ -102,7 +102,7 @@ Read costs and carbon content for fuels of thermal plant.
     2008,2,4,33.11,5.57,0
 """
 function getfuelcosts(filename::String)
-    start_time, data = nothing, Dict{Symbol,Float64}[]
+    start_time, data = nothing, Dict{NTuple{2,Symbol},Float64}[]
     rows = CSV.Rows(
         filename;
         missingstring = ["NA", "na", "default"],
@@ -112,8 +112,38 @@ function getfuelcosts(filename::String)
     row, row_state = iterate(rows)
     fuels = Dict(
         str2sym("$k") => parse(Float64, row[k]) for
-        k in CSV.getnames(row) if !(k in (:Column1, :Column2, :CO2))
+        k in CSV.getnames(row) if !(k in (:Column1, :Column2, :Column3, :Power))
     )
+        
+    # Skip YEAR,WEEK,... row
+    _, row_state = iterate(rows, row_state)
+    start_time = TimePoint(2023,1) # to be updated
+    # Outer loop: Iterate over groups of rows (1 group per year-week pair)
+    for i in 1:(52*30)+1  # TODO: fix 30 and 5 to config
+        d = Dict{NTuple{2,Symbol},Float64}()  # Initialize the dictionary for each group
+        # Inner loop: Iterate over the 5 load blocks
+        for block in 1:5
+            ret = iterate(rows, row_state)
+            if ret === nothing
+                break  # Exit if there are no more rows
+            end
+            row, row_state = ret
+            if i == 0 && block == 1
+                start_time = TimePoint(parse(Int, row.Column1), parse(Int, row.Column2))
+            end
+            # Add elements to the dictionary for the current block
+            for k in CSV.getnames(row)
+                if !(k in (:Column1, :Column2, :Column3))
+                    d[(str2sym("$k"), Symbol("B$block"))] = parse(Float64, row[k])
+                end
+            end
+        end
+
+        # Push the dictionary to `data` and clear it for the next group
+        push!(data, d)
+    end
+    
+    r"""
     # Skip YEAR,WEEK,... row
     _, row_state = iterate(rows, row_state)
     while (ret = iterate(rows, row_state)) !== nothing
@@ -121,14 +151,17 @@ function getfuelcosts(filename::String)
         time = TimePoint(parse(Int, row.Column1), parse(Int, row.Column2))
         if isempty(data)
             start_time = time
-        elseif time != start_time + length(data)
-            error("Weeks in $filename must be contiguous")
+        #elseif time != start_time + length(data) 
+        #    error("Weeks in $filename must be contiguous")
         end
-        d = Dict{Symbol,Float64}(
-            str2sym("$k") => parse(Float64, row[k]) for
-            k in CSV.getnames(row) if !(k in (:Column1, :Column2))
+        d = Dict{NTuple{2,Symbol},Float64}(
+            (str2sym("$k"), str2sym(row.Column3)) => parse(Float64, row[k]) for
+            k in CSV.getnames(row) if !(k in (:Column1, :Column2, :Column3))
         )
+        
         push!(data, d)
     end
-    return TimeSeries{Dict{Symbol,Float64}}(start_time, data), fuels
+
+    """
+    return TimeSeries{Dict{NTuple{2,Symbol},Float64}}(start_time, data), fuels
 end
