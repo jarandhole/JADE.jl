@@ -725,8 +725,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
 
 
             SDDP.parameterize(md, inflow_uncertainty) do ϕ 
-                y = 0
-                j = 0
+                y = 1991
+                j = 2023
                 for (c, value) in ϕ
                 if c == :scenario
                     if value < 1000
