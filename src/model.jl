@@ -137,11 +137,11 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     md,
                     begin
                         # Invested capacity state variables fixed to investment decision
-                        idynamic[i in s.INVESTABLES],
+                        inv_balance[i in s.INVESTABLES],
                         invested_capacity[i].out == invested_capacity[i].in + investment_decision[i]  
             
                         # Reservoir levels unchanged through investment stage
-                        rbalance[r in s.RESERVOIRS],
+                        inv_rbalance[r in s.RESERVOIRS],
                         reslevel[r].out == reslevel[r].in
 
                         # Shedding zero in investment stage
@@ -368,7 +368,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 md,
                 begin
                     # Invested capacity state variables fixed
-                    idynamic[i in s.INVESTABLES],
+                    inv_balance_operations[i in s.INVESTABLES],
                     invested_capacity[i].out == invested_capacity[i].in
                     # Lower and upper bounds on flows
                     natOver[a in FLOWOVER, bl in s.BLOCKS],
