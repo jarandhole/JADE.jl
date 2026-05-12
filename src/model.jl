@@ -540,6 +540,27 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 )
             end
 
+            JuMP.@constraints(
+                md,
+                begin
+                    # Conservation for reservoirs
+                    rbalance[r in s.RESERVOIRS],
+                    (reslevel[r].out - reslevel[r].in) * 1E3 * scale_factor ==
+                    SECONDSPERHOUR / 1E3 * (
+                        sum(durations[bl] * netflow[r, bl] for bl in s.BLOCKS) + totHours * inflow[r] # TODO: here durations and ==
+                    )
+
+                    # Conservation for junction points with inflow
+                    jbalance[c in s.CATCHMENTS_WITH_INFLOW, bl in s.BLOCKS; c in s.JUNCTIONS],
+                    netflow[c, bl] + inflow[c] == 0
+
+                    # Flow conservation for junctions without an inflow
+                    conserveFlow[c in s.JUNCTIONS_WITHOUT_INFLOW, bl in s.BLOCKS],
+                    netflow[c, bl] == 0
+                end
+            )
+
+
             # Power times reactance of arcs in a loop adds to zero
             # ABP disable
             #       loopflow[l in LOOPS, bl in s.BLOCKS],
@@ -611,26 +632,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             #    duration_netflow[r in s.CATCHMENTS_WITH_INFLOW, bl in s.BLOCKS],
             #    durations[bl] * netflow[r, bl]
             #)
-
-            JuMP.@constraints(
-                md,
-                begin
-                    # Conservation for reservoirs
-                    rbalance[r in s.RESERVOIRS],
-                    (reslevel[r].out - reslevel[r].in) * 1E3 * scale_factor ==
-                    SECONDSPERHOUR / 1E3 * (
-                        sum(durations[bl] * netflow[r, bl] for bl in s.BLOCKS) + totHours * inflow[r] # TODO: here durations and ==
-                    )
-
-                    # Conservation for junction points with inflow
-                    jbalance[c in s.CATCHMENTS_WITH_INFLOW, bl in s.BLOCKS; c in s.JUNCTIONS],
-                    netflow[c, bl] + inflow[c] == 0
-
-                    # Flow conservation for junctions without an inflow
-                    conserveFlow[c in s.JUNCTIONS_WITHOUT_INFLOW, bl in s.BLOCKS],
-                    netflow[c, bl] == 0
-                end
-            )
 
             for dr in d.rundata.decision_rules
                 if timenow.week ∉ dr.weeks
