@@ -121,7 +121,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                         invested_capacity[i].out == invested_capacity[i].in + investment_decision[i]  
             
                         # Reservoir levels unchanged through investment stage
-                        inv_rbalance[r in s.RESERVOIRS],
+                        rbalance[r in s.RESERVOIRS],
                         reslevel[r].out == reslevel[r].in
                     end
                 )
@@ -147,6 +147,13 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         #------------------------------------------------------------------------
         # Investment version: the rest of the model is defined for stages after investment stage
         #-----------------------------------------------------------------------
+            # Defining decision variables for each investment option
+            JuMP.@variable(
+                md,
+                investment_decision[i in s.INVESTABLES] == 0
+            )
+        
+        
             CONTINGENT = [
                 r for r in s.RESERVOIRS if sum(
                     d.reservoirs[r].contingent[timenow][j].level for
@@ -355,7 +362,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 md,
                 begin
                     # Invested capacity state variables fixed
-                    inv_balance_operations[i in s.INVESTABLES],
+                    inv_balance[i in s.INVESTABLES],
                     invested_capacity[i].out == invested_capacity[i].in
                     # Lower and upper bounds on flows
                     natOver[a in FLOWOVER, bl in s.BLOCKS],
