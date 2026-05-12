@@ -47,7 +47,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
     if d.rundata.steady_state
         SDDP.add_edge(graph, number_of_wks + 1 => 2, d.rundata.discount) # Investment version: Shifting cyclic edge from 52 -> 1 to 53 -> 2
     end
-
+    # TODO what about the edge from 53 to 2, that should also be ^(1 / 52)
     if d.rundata.weekly_discounting && d.rundata.discount != 0
         wk_disc = d.rundata.discount^(1 / 52) # NVE TODO: this 52 should be stages per year from config
         for (index, obj) in graph.nodes
@@ -73,23 +73,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         if stage > 1 
             timenow = TimePoint(d.rundata.start_yr, d.rundata.start_wk) + stage - 2
         end 
-        
-        CONTINGENT = [
-            r for r in s.RESERVOIRS if sum(
-                d.reservoirs[r].contingent[timenow][j].level for
-                j in 1:length(d.reservoirs[r].contingent[timenow])
-            ) > 0.0
-        ]
-
-        dr_keys = [
-            (n, bl) for n in keys(d.dr_tranches[timenow]), bl in s.BLOCKS if
-            bl in keys(d.dr_tranches[timenow][n])
-        ]
-
-        en_keys = unique([
-            (n, sector, lb) for n in keys(d.en_tranches[timenow]) for
-            (sector, lb) in keys(d.en_tranches[timenow][n])
-        ])
 
         #------------------------------------------------------------------------
         # State variable: water in reservoirs
@@ -125,12 +108,9 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         
         if stage == 1
             # Defining decision variables for each investment option
-            JuMP.@variables(
+            JuMP.@variable(
                 md,
-                begin
                 investment_decision[i in s.INVESTABLES] >= d.investables[i].min_investment
-                #dummy_var >= 0 # A trivial variable for dummy constraints
-                end
             )
             
             JuMP.@constraints(
@@ -143,18 +123,9 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                         # Reservoir levels unchanged through investment stage
                         inv_rbalance[r in s.RESERVOIRS],
                         reslevel[r].out == reslevel[r].in
-
-                        # Shedding zero in investment stage
-                        #defineShedding[n in s.NODES, bl in s.BLOCKS],
-                        #dummy_var == 0
                     end
                 )
             
-            #JuMP.@variable(md, dummy_var >= 0)  # A trivial variable for dummy constraints
-
-            #JuMP.@constraint(md, defineShedding[n in s.NODES, bl in s.BLOCKS], dummy_var == 0) # Investment version: dummy constraint
-            #JuMP.@constraint(md, rbalance[r in s.RESERVOIRS], dummy_var == 0) # Investment version: dummy constraint
-
             # Stage objective set to cost of investments (ajusted for reinvestment in steady state)
             if d.rundata.steady_state 
                 SDDP.@stageobjective(
@@ -176,6 +147,22 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         #------------------------------------------------------------------------
         # Investment version: the rest of the model is defined for stages after investment stage
         #-----------------------------------------------------------------------
+            CONTINGENT = [
+                r for r in s.RESERVOIRS if sum(
+                    d.reservoirs[r].contingent[timenow][j].level for
+                    j in 1:length(d.reservoirs[r].contingent[timenow])
+                ) > 0.0
+            ]
+
+            dr_keys = [
+                (n, bl) for n in keys(d.dr_tranches[timenow]), bl in s.BLOCKS if
+                bl in keys(d.dr_tranches[timenow][n])
+            ]
+
+            en_keys = unique([
+                (n, sector, lb) for n in keys(d.en_tranches[timenow]) for
+                (sector, lb) in keys(d.en_tranches[timenow][n])
+            ])
             #------------------------------------------------------------------------
             # Other variables
             #------------------------------------------------------------------------
@@ -547,7 +534,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     rbalance[r in s.RESERVOIRS],
                     (reslevel[r].out - reslevel[r].in) * 1E3 * scale_factor ==
                     SECONDSPERHOUR / 1E3 * (
-                        sum(durations[bl] * netflow[r, bl] for bl in s.BLOCKS) + totHours * inflow[r] # TODO: here durations and ==
+                        sum(durations[bl] * netflow[r, bl] for bl in s.BLOCKS) + totHours * inflow[r]
                     )
 
                     # Conservation for junction points with inflow
