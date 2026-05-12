@@ -606,11 +606,11 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             #    end
             #end
 
-            JuMP.@expression(
-                md,
-                duration_netflow[r in s.CATCHMENTS_WITH_INFLOW, bl in s.BLOCKS],
-                durations[bl] * netflow[r, bl]
-            )
+            #JuMP.@expression(
+            #    md,
+            #    duration_netflow[r in s.CATCHMENTS_WITH_INFLOW, bl in s.BLOCKS],
+            #    durations[bl] * netflow[r, bl]
+            #)
 
             JuMP.@constraints(
                 md,
@@ -619,7 +619,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     rbalance[r in s.RESERVOIRS],
                     (reslevel[r].out - reslevel[r].in) * 1E3 * scale_factor ==
                     SECONDSPERHOUR / 1E3 * (
-                        sum(duration_netflow[r, bl] for bl in s.BLOCKS) + totHours * inflow[r] # TODO: here durations and ==
+                        sum(durations[bl] * netflow[r, bl] for bl in s.BLOCKS) + totHours * inflow[r] # TODO: here durations and ==
                     )
 
                     # Conservation for junction points with inflow
