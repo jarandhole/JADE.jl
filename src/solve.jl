@@ -258,7 +258,6 @@ function optimize_policy!(
 
         println("number of sample_paths: ", length(sample_paths))
         println("length of each sample_path: ", length(sample_paths[1]))
-        println("first sample path: ", sample_paths[1])
 
         parallel_scheme = nothing
         if async
@@ -281,13 +280,13 @@ function optimize_policy!(
                 sddpm,
                 iteration_limit = solveoptions.iterations,
                 cut_deletion_minimum = solveoptions.cutselection,
-                sampling_scheme = SDDP.Historical(sample_paths; terminate_on_dummy_leaf = true), # NB testing with terminate on dummy leaf
+                sampling_scheme = SDDP.Historical(sample_paths), # NB testing with different things here, orig (sample_paths; terminate_on_cycle = true)
                 cycle_discretization_delta = 10.0,
                 dashboard = true,
                 risk_measure = solveoptions.riskmeasure,
                 parallel_scheme = parallel_scheme,
                 print_level = print_level,
-                forward_pass = SDDP.DefaultForwardPass(; include_last_node = false),
+                forward_pass = SDDP.DefaultForwardPass(), #when terminate_on_cycle (;  include_last_node = false)
             )
         else
             solveresults = SDDP.train(
