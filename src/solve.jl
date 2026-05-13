@@ -251,6 +251,7 @@ function optimize_policy!(
                         end
                     end
                 end
+                println("Iteration $i, t $t, (t - 1) % (d.rundata.number_of_wks+1) + 1: $((t - 1) % (d.rundata.number_of_wks+1) + 1)")
                 push!(sample_path, ((t - 1) % (d.rundata.number_of_wks+1) + 1, s_inflows)) # Investment version: (d.rundata.number_of_wks+1)
             end
             push!(sample_paths, sample_path)

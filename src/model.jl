@@ -72,8 +72,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             timenow = TimePoint(d.rundata.start_yr, d.rundata.start_wk) + stage - 2
         end 
 
-        println("Building stage ", stage, " with time ", timenow)
-
         #------------------------------------------------------------------------
         # State variable: water in reservoirs
         #------------------------------------------------------------------------
@@ -107,7 +105,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         #------------------------------------------------------------------------
         
         if stage == 1
-            println("INSIDE STAGE 1!")
             # Defining decision variables for each investment option
             JuMP.@variable(
                 md,
