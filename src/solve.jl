@@ -280,7 +280,7 @@ function optimize_policy!(
                 sddpm,
                 iteration_limit = solveoptions.iterations,
                 cut_deletion_minimum = solveoptions.cutselection,
-                sampling_scheme = SDDP.Historical(sample_paths), # NB testing with different things here, orig (sample_paths; terminate_on_cycle = true)
+                sampling_scheme = SDDP.InSampleMonteCarlo(), # NB testing with different things here, orig SDDP.Historical(sample_paths; terminate_on_cycle = true)
                 cycle_discretization_delta = 10.0,
                 dashboard = true,
                 risk_measure = solveoptions.riskmeasure,
