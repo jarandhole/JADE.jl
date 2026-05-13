@@ -218,7 +218,7 @@ function optimize_policy!(
 
         @info("Generating a policy...")
 
-        for i in 1:solveoptions.iterations
+        for i in 1:solveoptions.iterations 
             sample_path = Tuple{Int,Dict{Symbol,Float64}}[]
             if sequences == nothing || Random.rand() < solveoptions.fractionMC
                 method = :montecarlo
@@ -254,8 +254,11 @@ function optimize_policy!(
                 push!(sample_path, ((t - 1) % (d.rundata.number_of_wks+1) + 1, s_inflows)) # Investment version: (d.rundata.number_of_wks+1)
             end
             push!(sample_paths, sample_path)
-            println("sample_paths", sample_paths)
         end
+
+        println("number of sample_paths: ", length(sample_paths))
+        println("length of each sample_path: ", length(sample_paths[1]))
+        println("first sample path: ", sample_paths[1])
 
         parallel_scheme = nothing
         if async
@@ -274,8 +277,6 @@ function optimize_policy!(
         end
 
         if d.rundata.steady_state && !solveoptions.reset_starting_levels
-            println("d.rundata.steady_state && !solveoptions.reset_starting_levels")
-            println("forward_pass = ", SDDP.DefaultForwardPass(; include_last_node = false))
             solveresults = SDDP.train(
                 sddpm,
                 iteration_limit = solveoptions.iterations,
