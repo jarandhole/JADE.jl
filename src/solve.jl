@@ -256,9 +256,6 @@ function optimize_policy!(
             push!(sample_paths, sample_path)
         end
 
-        println("number of sample_paths: ", length(sample_paths))
-        println("length of each sample_path: ", length(sample_paths[1]))
-
         parallel_scheme = nothing
         if async
             if d.parallel_optimizer == nothing
