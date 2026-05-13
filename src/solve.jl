@@ -227,7 +227,7 @@ function optimize_policy!(
                 method = :custom
                 count = count % (length(sequences)) + 1
             end
-            for t in 1:d.rundata.number_of_wks + extra + 1 # INV added + 1 for investment stage
+            for t in 1:d.rundata.number_of_wks + extra # INV added + 1 for investment stage BUT NOW REMOVED
                 s_inflows = Dict{Symbol,Float64}()
                 if t == 1
                     for c in d.sets.CATCHMENTS_WITH_INFLOW
