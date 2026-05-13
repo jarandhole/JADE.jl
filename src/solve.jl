@@ -251,10 +251,10 @@ function optimize_policy!(
                         end
                     end
                 end
-                println("Iteration $i, t $t, (t - 1) % (d.rundata.number_of_wks+1) + 1: $((t - 1) % (d.rundata.number_of_wks+1) + 1)")
                 push!(sample_path, ((t - 1) % (d.rundata.number_of_wks+1) + 1, s_inflows)) # Investment version: (d.rundata.number_of_wks+1)
             end
             push!(sample_paths, sample_path)
+            println("sample_paths", sample_paths)
         end
 
         parallel_scheme = nothing
@@ -274,13 +274,15 @@ function optimize_policy!(
         end
 
         if d.rundata.steady_state && !solveoptions.reset_starting_levels
+            println("d.rundata.steady_state && !solveoptions.reset_starting_levels")
+            println("forward_pass = ", SDDP.DefaultForwardPass(; include_last_node = false))
             solveresults = SDDP.train(
                 sddpm,
                 iteration_limit = solveoptions.iterations,
                 cut_deletion_minimum = solveoptions.cutselection,
                 sampling_scheme = SDDP.Historical(sample_paths; terminate_on_cycle = true),
                 cycle_discretization_delta = 10.0,
-                dashboard = false,
+                dashboard = true,
                 risk_measure = solveoptions.riskmeasure,
                 parallel_scheme = parallel_scheme,
                 print_level = print_level,

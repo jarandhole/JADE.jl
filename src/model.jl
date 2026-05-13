@@ -122,7 +122,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                         rbalance[r in s.RESERVOIRS],
                         reslevel[r].out == reslevel[r].in
 
-                        defineShedding, # Adding dummy constraint to avoid error on get_dual reading prices 
+                        defineShedding, # Adding dummy constraint to avoid error on get_dual / reading prices 
                         1 == 1
                     end
                 )
