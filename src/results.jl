@@ -24,8 +24,8 @@ function write_sim_results(
 )
 
     # Just aliases
-    nsims = parameters.replications
-    number_of_wks = d.rundata.number_of_wks * parameters.number_of_cycles
+    nsims = 1 # Testing with 1, used to be parameters.replications
+    number_of_wks = (d.rundata.number_of_wks-1) * parameters.number_of_cycles + 1 # INV (d.rundata.number_of_wks-1) annd + 1
 
     if d.rundata.discount == 0.0 || parameters.reset_starting_levels == true
         number_of_wks -= parameters.initial_stage - 1
