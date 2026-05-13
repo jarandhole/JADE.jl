@@ -121,6 +121,9 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                         # Reservoir levels unchanged through investment stage
                         rbalance[r in s.RESERVOIRS],
                         reslevel[r].out == reslevel[r].in
+
+                        defineShedding,
+                        1=1
                     end
                 )
             
