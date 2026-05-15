@@ -270,13 +270,13 @@ function optimize_policy!(
                 sddpm,
                 iteration_limit = solveoptions.iterations,
                 cut_deletion_minimum = solveoptions.cutselection,
-                sampling_scheme = SDDP.Historical(sample_paths; terminate_on_cycle = true),
+                sampling_scheme = SDDP.InSampleMonteCarlo(), #SDDP.Historical(sample_paths; terminate_on_cycle = true),
                 cycle_discretization_delta = 10.0,
                 dashboard = false,
                 risk_measure = solveoptions.riskmeasure,
                 parallel_scheme = parallel_scheme,
                 print_level = print_level,
-                forward_pass = SDDP.DefaultForwardPass(; include_last_node = false),
+                forward_pass = SDDP.DefaultForwardPass(), #(; include_last_node = false),
             )
         else
             solveresults = SDDP.train(
