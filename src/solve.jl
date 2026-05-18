@@ -227,7 +227,7 @@ function optimize_policy!(
                 method = :custom
                 count = count % (length(sequences)) + 1
             end
-            for t in 1:d.rundata.number_of_wks + extra # INV added + 1 for investment stage BUT NOW REMOVED becausse this went to t = 54 and (t - 1) % (d.rundata.number_of_wks+1) + 1 = 1 
+            for t in 1:(d.rundata.number_of_wks + extra)*5 # INV added + 1 for investment stage BUT NOW REMOVED becausse this went to t = 54 and (t - 1) % (d.rundata.number_of_wks+1) + 1 = 1 
                 s_inflows = Dict{Symbol,Float64}()
                 if t == 1
                     for c in d.sets.CATCHMENTS_WITH_INFLOW
@@ -255,6 +255,11 @@ function optimize_policy!(
             end
             push!(sample_paths, sample_path)
         end
+
+        println("Generated $(length(sample_paths)) sample paths for training using the $(method) method.")
+        println("Each sample path contains $(length(sample_paths[1])) stages.")
+        println("Each stage contains inflows for the following catchments: $(keys(sample_paths[1][1][2]))")
+        println("sample path example: $(sample_paths[1])")
 
         parallel_scheme = nothing
         if async
