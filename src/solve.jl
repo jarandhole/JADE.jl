@@ -262,12 +262,7 @@ function optimize_policy!(
                     println("Stage 1: skipping")
                 else
                     for i in 1:3
-                        new_t = t + (i - 1) * 52
-                        new_inflows = Dict{Symbol, Float64}()
-                        for (key, value) in inflows
-                            new_inflows[key] = value
-                        end
-                        push!(sample_path, (new_t, new_inflows))
+                        push!(sample_path, (t + i*52, inflows))
                     end
                 end
             end
