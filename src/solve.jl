@@ -227,7 +227,7 @@ function optimize_policy!(
                 method = :custom
                 count = count % (length(sequences)) + 1
             end
-            for t in 1:(d.rundata.number_of_wks + extra)*5 # INV added + 1 for investment stage BUT NOW REMOVED becausse this went to t = 54 and (t - 1) % (d.rundata.number_of_wks+1) + 1 = 1 
+            for t in 1:d.rundata.number_of_wks + extra # INV added + 1 for investment stage BUT NOW REMOVED becausse this went to t = 54 and (t - 1) % (d.rundata.number_of_wks+1) + 1 = 1 
                 s_inflows = Dict{Symbol,Float64}()
                 if t == 1
                     for c in d.sets.CATCHMENTS_WITH_INFLOW
@@ -255,6 +255,23 @@ function optimize_policy!(
             end
             push!(sample_paths, sample_path)
         end
+
+        for sample_path in sample_paths
+            for (t, inflows) in sample_path
+                if t == 1
+                    println("Stage 1: skipping")
+                else
+                    for i in 1:3
+                        new_t = t + (i - 1) * 52
+                        new_inflows = Dict{Symbol, Float64}()
+                        for (key, value) in inflows
+                            new_inflows[key] = value
+                        end
+                        push!(sample_path, (new_t, new_inflows))
+                    end
+                end
+            end
+        end 
 
         println("Generated $(length(sample_paths)) sample paths for training using the $(method) method.")
         println("Each sample path contains $(length(sample_paths[1])) stages.")
