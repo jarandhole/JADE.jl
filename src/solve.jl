@@ -256,22 +256,29 @@ function optimize_policy!(
             push!(sample_paths, sample_path)
         end
 
+        new_sample_paths = Vector{Tuple{Int,Dict{Symbol,Float64}}}[]
+
         for sample_path in sample_paths
+            println("Looking at samplepath with length $(length(sample_path))")
             for (t, inflows) in sample_path
+                new_sample_path = Tuple{Int,Dict{Symbol,Float64}}[]
                 if t == 1
-                    println("Stage 1: skipping")
+                    push!(new_sample_path, (t, inflows))
                 else
                     for i in 1:3
-                        push!(sample_path, (t + i*52, inflows))
+                        push!(new_sample_path, (t + i*52, inflows))
                     end
                 end
+                println("Generated new sample path with length $(length(new_sample_path))")
+                push!(new_sample_paths, new_sample_path)
             end
+
         end 
 
-        println("Generated $(length(sample_paths)) sample paths for training using the $(method) method.")
-        println("Each sample path contains $(length(sample_paths[1])) stages.")
-        println("Each stage contains inflows for the following catchments: $(keys(sample_paths[1][1][2]))")
-        println("sample path example: $(sample_paths[1])")
+        println("Made it with $(length(new_sample_paths)) sample paths for training using the $(method) method.")
+        println("Each sample path contains $(length(new_sample_paths[1])) stages.")
+        println("Each stage contains inflows for the following catchments: $(keys(new_sample_paths[1][1][2]))")
+        println("sample path example: $(new_sample_paths[1])")
 
         parallel_scheme = nothing
         if async
