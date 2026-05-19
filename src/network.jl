@@ -5,8 +5,6 @@
 #  If a copy of the MPL was not distributed with this file, You can obtain one at
 #  http://mozilla.org/MPL/2.0/.
 
-import LinearAlgebra: nullspace
-
 """
 	out_neighbors(vertex::Symbol, edges::Vector{NTuple{2,Symbol}})
 
@@ -206,7 +204,7 @@ function findloops(sets::Sets)
         tempmat = incidencemat[:, 1:count]
 
         # Test if we have any cycles (so not a tree)
-        V = nullspace(tempmat)
+        V = LinearAlgebra.nullspace(tempmat)
         # If we have no cycles, keep the current arc for our tree
         if size(V, 2) == 0
             count += 1
