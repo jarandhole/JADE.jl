@@ -107,7 +107,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             md,
             begin
                 # Dispatch of energy in MW from hydro stations
-                hydro_disp[s.HYDROS, s.BLOCKS] >= 0
+                hydro_disp[s.HYDROS, s.BLOCKS]
                 # Amount of thermal energy used, in MW
                 thermal_use[s.THERMALS, s.BLOCKS] >= 0
                 # Transmission flows between nodes in MW
@@ -272,6 +272,14 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             )
         end
 
+        # do not allow spillover if sp<0
+        nospillstations = []
+        for m in s.HYDROS
+            if d.hydro_stations[m].sp < 0
+                push!(nospillstations, d.hydro_stations[m].arc)
+            end
+        end
+
         #------------------------------------------------------------------------
         # Define constraints
         #------------------------------------------------------------------------
@@ -285,6 +293,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 flowunder[a, bl] >= d.natural_arcs[a].minflow - naturalflows[a, bl]
                 spillOver[a in SPILLOVER, bl in s.BLOCKS],
                 spillover[a, bl] >= spills[a, bl] - d.station_arcs[a].maxflow
+                noSpillOver[a in nospillstations, bl in s.BLOCKS], spillover[a, bl] == 0
 
                 # Capacity constraints
 
@@ -292,6 +301,13 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 useHydro[m in s.HYDROS, bl in s.BLOCKS],
                 hydro_disp[m, bl] <=
                 d.hydro_stations[m].capacity - sum(
+                    d.outage[timenow][(mm, bb)] for
+                    (mm, bb) in keys(d.outage[timenow]) if (mm, bb) == (m, bl)
+                )
+
+                pumpHydro[m in s.HYDROS, bl in s.BLOCKS],
+                hydro_disp[m, bl] >=
+                -d.hydro_stations[m].capacity + sum(
                     d.outage[timenow][(mm, bb)] for
                     (mm, bb) in keys(d.outage[timenow]) if (mm, bb) == (m, bl)
                 )
