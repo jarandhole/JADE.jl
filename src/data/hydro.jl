@@ -514,7 +514,7 @@ function set_reservoir_sp!(
     #   conversion factor for m^3 -> MWh
     for (name, reservoir) in reservoirs
         if name ∈ keys(reservoir_has_downstream)
-            sp = sum(hydros[station].sp for station in reservoir_has_downstream[name])
+            sp = sum(hydros[station].sp for station in reservoir_has_downstream[name]; init = 0.0)
             reservoir.sp = sp / 3600
         else
             reservoir.sp = 0
