@@ -5,8 +5,6 @@
 #  If a copy of the MPL was not distributed with this file, You can obtain one at
 #  http://mozilla.org/MPL/2.0/.
 
-import LinearAlgebra: nullspace
-
 """
 	out_neighbors(vertex::Symbol, edges::Vector{NTuple{2,Symbol}})
 
@@ -31,26 +29,22 @@ end
     hasdownstream(
         sets::Sets,
         station_arcs::Dict{NTuple{2,Symbol},StationArc},
-        reverseflow::Array{Symbol,1},
     )
 
 This function is used to determine which hydro stations are present downstream
 from all reservoirs.
 
-Inputs
+### Inputs
   sets                      A JADE set structure. Should include all arcs and nodes.
   station_arcs              A dictionary we will use to get the station name from a station arc.
-  reverseflow               A list of station arcs that are pumped hydro.
-Returns
+
+### Returns
   reservoir_has_downstream  A dictionary indexed by reservoirs that stores a
                             list of hydro stations that each reservoir has
                             between itself and the sea.
 """
-function hasdownstream(
-    sets::Sets,
-    station_arcs::Dict{NTuple{2,Symbol},StationArc},
-    reverseflow::Array{Symbol,1},
-)
+function hasdownstream(sets::Sets, station_arcs::Dict{NTuple{2,Symbol},StationArc})
+    reverseflow = Symbol[]
     @assert !isempty(sets.RESERVOIRS)
     @assert !isempty(sets.STATION_ARCS)
 
@@ -165,71 +159,4 @@ function hasdownstream(
     end # next reservoir
 
     return reservoir_has_downstream
-end
-
-"""
-This function finds independent loops in a transmission network
-"""
-function findloops(sets::Sets)
-    tol = 1e-12
-
-    @assert !isempty(sets.NODES)
-    @assert !isempty(sets.TRANS_ARCS)
-
-    # Dictionary to look up cached node indices
-    ndict = Dict{Symbol,Int}()
-    for (i, n) in enumerate(sets.NODES)
-        ndict[n] = i
-    end
-
-    # Spanning tree has n-1 arcs, but we might add one redundant arc
-    incidencemat = zeros(Int, length(sets.NODES), length(sets.NODES))
-
-    cycles = Array{NTuple{2,Symbol}}[]
-
-    count = 1                                           # count of arcs added to our tree
-    ncycles = 0                                         # number of cycles found
-
-    # Keep an ordered list of the arcs added to the tree so far
-    currentarcs = NTuple{2,Symbol}[]
-
-    # Begin building a spanning tree
-    for i in 1:length(sets.TRANS_ARCS)
-        push!(currentarcs, sets.TRANS_ARCS[i])
-
-        # Add the arc to the matrix we are currently considering
-        fromnode, tonode = sets.TRANS_ARCS[i]
-        incidencemat[ndict[fromnode], count] = -1
-        incidencemat[ndict[tonode], count] = 1
-
-        # The temporary matrix we are currently considering (tree so far)
-        tempmat = incidencemat[:, 1:count]
-
-        # Test if we have any cycles (so not a tree)
-        V = nullspace(tempmat)
-        # If we have no cycles, keep the current arc for our tree
-        if size(V, 2) == 0
-            count += 1
-        else
-            # No way we added more than 1 independent cycle
-            @assert size(V, 2) == 1
-            # Get rid of the arc we added in the incidence matrix
-            incidencemat[ndict[fromnode], count] = 0
-            incidencemat[ndict[tonode], count] = 0
-            ncycles += 1
-            push!(cycles, NTuple{2,Symbol}[])
-            # Figure out which arcs form the cycle and record the cycle
-            for a in 1:size(V, 1)                               # loop over all arcs
-                if abs(V[a, 1]) > tol                            # check if arc is in the current cycle
-                    push!(cycles[ncycles], currentarcs[a])         # add the arc to the cycle
-                end
-            end # for
-            # We don't want to keep the arc that formed a cycle for our tree
-            pop!(currentarcs)
-        end # if
-    end # for
-
-    # Store the cycles we found as a JADE set
-    # sets.LOOPS = cycles
-    return cycles
 end
