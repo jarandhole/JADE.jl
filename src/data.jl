@@ -110,7 +110,12 @@ function gettimeseries(file::String)
     columns = Symbol[]
     start_time = nothing
     parsefile(file, true) do items
-        @assert length(items) >= 3
+        #@assert length(items) >= 3
+        row_check = 0
+        if length(items) < 3 && row_check == 0
+            println("Warning, row less than three elements in $file: ", items)
+            row_check += 1
+        end
         if lowercase(items[1]) == "year"
             # header row
             for it in items[3:end]
