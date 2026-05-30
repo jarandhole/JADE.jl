@@ -386,7 +386,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     new_wind_gen[m, bl] <=
                     d.wind_representation[m][(timenow.year,timenow.week, bl)] * invested_capacity[m].in
 
-                    # Investment version: defining capacity constraints for solar
+                    # Investment version: defining capacity constraints for solar # TODO: these should match inflow year, make parameters
                     useSolar[m in s.SOLARS, bl in s.BLOCKS],
                     new_solar_gen[m, bl] <=
                     d.solar_representation[m][(timenow.year,timenow.week, bl)] * invested_capacity[m].in
