@@ -256,28 +256,28 @@ function optimize_policy!(
             push!(sample_paths, sample_path)
         end
 
-        new_sample_paths = Vector{Tuple{Int,Dict{Symbol,Float64}}}[]
+        #new_sample_paths = Vector{Tuple{Int,Dict{Symbol,Float64}}}[]
 
-        for sample_path in sample_paths
-            println("Looking at samplepath with length $(length(sample_path))")
-            new_sample_path = Tuple{Int,Dict{Symbol,Float64}}[]
-            for (t, inflows) in sample_path
-                if t == 1
-                    push!(new_sample_path, (t, inflows))
-                else
-                    for i in 1:3
-                        push!(new_sample_path, (t + (i-1)*52, inflows))
-                    end
-                end
-                push!(new_sample_paths, new_sample_path)
-            end
-            println("Finished with new samplepath with length $(length(new_sample_path))")
-        end 
+        #for sample_path in sample_paths
+        #    println("Looking at samplepath with length $(length(sample_path))")
+        #    new_sample_path = Tuple{Int,Dict{Symbol,Float64}}[]
+        #    for (t, inflows) in sample_path
+        #        if t == 1
+        #            push!(new_sample_path, (t, inflows))
+        #        else
+        #            for i in 1:3
+        #                push!(new_sample_path, (t + (i-1)*52, inflows))
+        #            end
+        #        end
+        #        push!(new_sample_paths, new_sample_path)
+        #    end
+        #    println("Finished with new samplepath with length $(length(new_sample_path))")
+        #end 
 
-        println("Made it with $(length(new_sample_paths)) sample paths for training.")
-        println("Each sample path contains $(length(new_sample_paths[1])) stages.")
-        println("Each stage contains inflows for the following catchments: $(keys(new_sample_paths[1][1][2]))")
-        println("sample path example: $(new_sample_paths[1])")
+        println("Made it with $(length(sample_paths)) sample paths for training.")
+        println("Each sample path contains $(length(sample_paths[1])) stages.")
+        #println("Each stage contains inflows for the following catchments: $(keys(new_sample_paths[1][1][2]))")
+        #println("sample path example: $(new_sample_paths[1])")
 
         parallel_scheme = nothing
         if async
