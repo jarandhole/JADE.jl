@@ -43,7 +43,7 @@ function getwindrepresentation(filename::String)
         # Read each subsequent line
         for line in eachline(file)
             row = split(chomp(line), ",")
-            station = Symbol(row[1])
+            station = str2sym(row[1])
             year = parse(Int, row[2])
             week = parse(Int, row[3])
 
