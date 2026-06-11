@@ -353,8 +353,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                         transmission[n, bl] +
                         sum(thermal_use[m, bl] for m in d.nodehas[n].thermal) +
                         sum(hydro_disp[m, bl] for m in d.nodehas[n].hydro) +
-                        sum(wind_gen[m, bl] for m in d.nodehas[n].wind) + # Investment version: adding wind generation to supply, need nodehas
-                        sum(solar_gen[m, bl] for m in d.nodehas[n].solar) # Investment version: adding solar generation to supply, need nodehas
+                        sum(new_wind_gen[m, bl] for m in d.nodehas[n].wind) + # Investment version: adding wind generation to supply, need nodehas
+                        sum(new_solar_gen[m, bl] for m in d.nodehas[n].solar) # Investment version: adding solar generation to supply, need nodehas
                     )
                 )
             end
