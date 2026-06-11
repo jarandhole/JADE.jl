@@ -483,13 +483,13 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                         postransflow[(i, j), bl] == sum(
                             postransflowtranche[(i, j), k, bl] for
                             k in 1:length(d.transmission[(i, j)].Poslosses)
-                        )
+                        ) + (str2sym(string(i) * "_TO_" * string(j)) in s.INVESTABLES ? invested_capacity[str2sym(string(i) * "_TO_" * string(j))].in : 0)
 
                         defineNegFlowTranches[(i, j) in s.TRANS_ARCS, bl in s.BLOCKS],
                         negtransflow[(i, j), bl] == sum(
                             negtransflowtranche[(i, j), k, bl] for
                             k in 1:length(d.transmission[(i, j)].Neglosses)
-                        )
+                        ) - (str2sym(string(i) * "_TO_" * string(j)) in s.INVESTABLES ? invested_capacity[str2sym(string(i) * "_TO_" * string(j))].in : 0)
 
                         definePosLossTranche1[
                             (i, j) in s.TRANS_ARCS,
