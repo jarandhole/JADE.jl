@@ -398,7 +398,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     d.thermal_stations[m].capacity - sum(
                         d.outage[timenow][(mm, bb)] for
                         (mm, bb) in keys(d.outage[timenow]) if (mm, bb) == (m, bl)
-                    )
+                    ) + (m in s.INVESTABLES ? invested_capacity[m].in : 0) # Investment version: adding invested capacity to thermal capacity
 
                     # Transmission line capacities
                     transUpper[(n, m) in s.TRANS_ARCS, bl in s.BLOCKS],
