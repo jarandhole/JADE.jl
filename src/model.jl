@@ -91,8 +91,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         # Investment version: State variables: invested capacities
         #------------------------------------------------------------------------
         
-        println("s.INVESTABLES: ")
-        println(s.INVESTABLES)
+        println("s.TRANS_ARCS ")
+        println(s.TRANS_ARCS)
 
         JuMP.@variable(
             md,
