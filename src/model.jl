@@ -21,7 +21,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
     penalty_ub = d.rundata.penalty_ub
     penalty_lb = d.rundata.penalty_lb
     number_of_wks = d.rundata.number_of_wks
-    nscenarios = d.rundata.nscenarios
+    #nscenarios = d.rundata.nscenarios
     nmargins = length(d.terminal_eqns)
     scale_factor = d.rundata.scale_reservoirs
     #scale_inv = d.rundata.scale_investment_costs
@@ -31,12 +31,12 @@ function JADEsddp(d::JADEData, optimizer = nothing)
     @assert nmargins > 0
 
     # Some more convenient names
-    LOOPS = d.loops
+    #LOOPS = d.loops
     s = d.sets
 
     if optimizer == nothing
         error("No solver specified")
-    elseif typeof(optimizer) <: Function
+    #elseif typeof(optimizer) <: Function
         #d.parallel_optimizer = optimizer
         #optimizer = d.parallel_optimizer()
     end
@@ -495,7 +495,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                             k in 1:length(d.transmission[(i, j)].Poslosses),
                         ],
                         postransflowtranche[(i, j), k, bl] <=
-                        d.transmission[(i, j)].Poslosses[k][1]
+                        d.transmission[(i, j)].Poslosses[k][1] + (str2sym(string(i) * "_TO_" * string(j)) in s.INVESTABLES ? invested_capacity[str2sym(string(i) * "_TO_" * string(j))].in : 0)
 
                         defineNegLossTranche1[
                             (i, j) in s.TRANS_ARCS,
@@ -503,7 +503,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                             k in 1:length(d.transmission[(i, j)].Neglosses),
                         ],
                         negtransflowtranche[(i, j), k, bl] <=
-                        d.transmission[(i, j)].Neglosses[k][1]
+                        d.transmission[(i, j)].Neglosses[k][1] + (str2sym(string(i) * "_TO_" * string(j)) in s.INVESTABLES ? invested_capacity[str2sym(string(i) * "_TO_" * string(j))].in : 0)
 
                         defineArcLosses[(i, j) in s.TRANS_ARCS, bl in s.BLOCKS],
                         losses[(i, j), bl] >=
