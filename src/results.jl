@@ -266,9 +266,9 @@ function write_sim_results(
     #------------------------------------
     # Contingent storage cost
     #------------------------------------
-    adddata("contingent_storage_cost_\$", outdir("ContingentStorageCost.csv")) do i, j
-        return results[i][j][:contingent_storage_cost]
-    end
+    #adddata("contingent_storage_cost_\$", outdir("ContingentStorageCost.csv")) do i, j
+    #    return results[i][j][:contingent_storage_cost]
+    #end
 
     #------------------------------------
     # Archive run file
