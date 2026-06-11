@@ -77,10 +77,11 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         #------------------------------------------------------------------------
         JuMP.@variable(
             md,
-            -sum(
-                d.reservoirs[r].contingent[timenow][j].level / scale_factor for
-                j in 1:length(d.reservoirs[r].contingent[timenow])
-            ) / scale_factor <=
+            #-sum(
+            #    d.reservoirs[r].contingent[timenow][j].level / scale_factor for
+            #    j in 1:length(d.reservoirs[r].contingent[timenow])
+            #) / scale_factor 
+            0 <=
             reslevel[r in s.RESERVOIRS] <=
             d.reservoirs[r].capacity[timenow] / scale_factor,
             SDDP.State,
@@ -158,12 +159,12 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             )
         
         
-            CONTINGENT = [
-                r for r in s.RESERVOIRS if sum(
-                    d.reservoirs[r].contingent[timenow][j].level for
-                    j in 1:length(d.reservoirs[r].contingent[timenow])
-                ) > 0.0
-            ]
+            #CONTINGENT = [
+            #    r for r in s.RESERVOIRS if sum(
+            #        d.reservoirs[r].contingent[timenow][j].level for
+            #        j in 1:length(d.reservoirs[r].contingent[timenow])
+            #    ) > 0.0
+            #]
 
             dr_keys = [
                 (n, bl) for n in keys(d.dr_tranches[timenow]), bl in s.BLOCKS if
@@ -225,10 +226,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     # Spill flows over upper bound (new)
                     spillover[SPILLOVER, s.BLOCKS] >= 0
                     # Contingent storage tranche
-                    contingent[
-                        r in CONTINGENT,
-                        1:length(d.reservoirs[r].contingent[timenow]),
-                    ] >= 0
+                    #contingent[
+                    #    r in CONTINGENT,
+                    #    1:length(d.reservoirs[r].contingent[timenow]),
+                    #] >= 0
                     # To track inflow levels seen
                     inflow[[s.CATCHMENTS_WITH_INFLOW; [:scenario]]]
                 end
@@ -452,25 +453,25 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 end
             )
 
-            if length(CONTINGENT) != 0
-                JuMP.@constraints(
-                    md,
-                    begin
-                        contingentstorage[r in CONTINGENT],
-                        reslevel[r].out >=
-                        -sum(
-                            contingent[r, j] / scale_factor for
-                            j in 1:length(d.reservoirs[r].contingent[timenow])
-                        )
+            #if length(CONTINGENT) != 0
+            #    JuMP.@constraints(
+            #        md,
+            #        begin
+            #            contingentstorage[r in CONTINGENT],
+            #            reslevel[r].out >=
+            #            -sum(
+            #                contingent[r, j] / scale_factor for
+            #                j in 1:length(d.reservoirs[r].contingent[timenow])
+            #            )
 
-                        maxcontingenttranche[
-                            r in CONTINGENT,
-                            j in 1:(length(d.reservoirs[r].contingent[timenow])-1),
-                        ],
-                        contingent[r, j] <= d.reservoirs[r].contingent[timenow][j].level
-                    end
-                )
-            end
+            #            maxcontingenttranche[
+            #                r in CONTINGENT,
+            #                j in 1:(length(d.reservoirs[r].contingent[timenow])-1),
+            #            ],
+            #            contingent[r, j] <= d.reservoirs[r].contingent[timenow][j].level
+            #        end
+            #    )
+            #end
 
             ###################
             #ABP losses code
@@ -626,15 +627,15 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 )
             )
 
-            JuMP.@expression(
-                md,
-                contingent_storage_cost,
-                sum(
-                    contingent[r, j] / scale_factor *
-                    d.reservoirs[r].contingent[timenow][j].penalty for r in CONTINGENT,
-                    j in 1:length(d.reservoirs[r].contingent[timenow])
-                )
-            )
+            #JuMP.@expression(
+            #    md,
+            #    contingent_storage_cost,
+            #    sum(
+            #        contingent[r, j] / scale_factor *
+            #        d.reservoirs[r].contingent[timenow][j].penalty for r in CONTINGENT,
+            #        j in 1:length(d.reservoirs[r].contingent[timenow])
+            #    )
+            #)
 
             JuMP.@expression(
                 md,
@@ -660,8 +661,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     (name, station) in d.hydro_stations, bl in s.BLOCKS
                 ) +
                 flowpenalties +
-                lostloadcosts +
-                contingent_storage_cost
+                lostloadcosts #+
+                #contingent_storage_cost
             )
 
             if stage < number_of_wks + 1 || !d.rundata.use_terminal_mwvs # Investment version: adding + 1 on number_of_wks here to get to final stage
