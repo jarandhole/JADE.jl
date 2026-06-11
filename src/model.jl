@@ -90,6 +90,9 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         #------------------------------------------------------------------------
         # Investment version: State variables: invested capacities
         #------------------------------------------------------------------------
+        
+        println("s.INVESTABLES: ")
+        println(s.INVESTABLES)
 
         JuMP.@variable(
             md,
@@ -399,16 +402,11 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                         (mm, bb) in keys(d.outage[timenow]) if (mm, bb) == (m, bl)
                     )
 
-                    println("s.INVESTABLES: ")
-                    println(s.INVESTABLES)
-
                     # Transmission line capacities
                     transUpper[(n, m) in s.TRANS_ARCS, bl in s.BLOCKS],
                     transflow[(n, m), bl] <=
                     d.transmission[(n, m)].poscapacity + (string(n)*"_TO_"*string(m) in s.INVESTABLES ? invested_capacity[string(n)*"_TO_"*string(m)].in : 0) - # Investment version: adding invested capacity to transmission capacity
                     d.transmission[(n, m)].posoutage[timenow][bl]
-                    println("n: ", n, ", m: ", m)
-
                     transLower[(n, m) in s.TRANS_ARCS, bl in s.BLOCKS],
                     -d.transmission[(n, m)].negcapacity - (string(n)*"_TO_"*string(m) in s.INVESTABLES ? invested_capacity[string(n)*"_TO_"*string(m)].in : 0) + # Investment version: adding invested capacity to transmission capacity, same for both ways so far
                     d.transmission[(n, m)].negoutage[timenow][bl] <= transflow[(n, m), bl]
