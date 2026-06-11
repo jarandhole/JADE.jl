@@ -414,7 +414,7 @@ function JADEdata(rundata::RunData)
     hydro_stations, station_arcs = gethydros(filedir("hydro_stations.csv"), sets.NODES)
     sets.HYDROS = collect(keys(hydro_stations))
     sets.STATION_ARCS = collect(keys(station_arcs))
-    inv_hydro = getinvhydro(filedir("hydro_stations_investable.csv")) # Investment version: whether each hydro station is investable
+    #inv_hydro = getinvhydro(filedir("hydro_stations_investable.csv")) # Investment version: whether each hydro station is investable
 
     # Investment version: also read in wind and solar station data, and assign to nodes
     @info("Input wind stations")
@@ -519,7 +519,7 @@ function JADEdata(rundata::RunData)
     sets.TRANS_ARCS = collect(keys(transmission))
 
     # Investment version: read in which transmission arcs are investable
-    inv_transmission = getinvtransmission(filedir("transmission_investable.csv"))
+    #inv_transmission = getinvtransmission(filedir("transmission_investable.csv"))
 
     @info("Input outages")
 
@@ -649,8 +649,8 @@ function JADEdata(rundata::RunData)
         getterminalvalue(filedir("terminal_water_value.csv")),
         sets,
         investables, # Investment version: investable assets
-        inv_hydro, # Investment version: whether each hydro station is investable
-        inv_transmission, # Investment version: whether each transmission arc is investable
+        #inv_hydro, # Investment version: whether each hydro station is investable
+        #inv_transmission, # Investment version: whether each transmission arc is investable
         wind_stations, # Investment version: wind stations
         solar_stations, # Investment version: solar stations
         wind_representation, # Investment version: taking wind capacity into weeks and blocks in subproblems
@@ -686,8 +686,8 @@ function backup_input_files(rundata::RunData)
         "wind_stations.csv", # Investment version: wind station data
         "solar_stations.csv", # Investment version: solar station data
         "investments.csv", # Investment version: investable asset data
-        "hydro_stations_investable.csv", # Investment version: whether each hydro station is investable
-        "transmission_investable.csv", # Investment version: whether each transmission arc is investable
+        #"hydro_stations_investable.csv", # Investment version: whether each hydro station is investable
+        #"transmission_investable.csv", # Investment version: whether each transmission arc is investable
     ]
 
     out_path = joinpath(
