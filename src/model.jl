@@ -77,10 +77,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         #------------------------------------------------------------------------
         JuMP.@variable(
             md,
-            #-sum(
-            #    d.reservoirs[r].contingent[timenow][j].level / scale_factor for
-            #    j in 1:length(d.reservoirs[r].contingent[timenow])
-            #) / scale_factor 
             0 <=
             reslevel[r in s.RESERVOIRS] <=
             d.reservoirs[r].capacity[timenow] / scale_factor,
@@ -88,10 +84,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             initial_value = d.reservoirs[r].initial / scale_factor
         )
 
-        #------------------------------------------------------------------------
-        # Investment version: State variables: invested capacities
-        #------------------------------------------------------------------------
-        
         JuMP.@variable(
             md,
             0 <=
@@ -101,12 +93,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             initial_value = 0
         )
 
-        #------------------------------------------------------------------------
+
         # Investment version: Define variables, constraints and objective for investment stage
-        #------------------------------------------------------------------------
-        
+
         if stage == 1
-            # Defining decision variables for each investment option
             JuMP.@variable(
                 md,
                 investment_decision[i in s.INVESTABLES] >= d.investables[i].min_investment
@@ -115,11 +105,9 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             JuMP.@constraints(
                     md,
                     begin
-                        # Invested capacity state variables fixed to investment decision
                         inv_balance[i in s.INVESTABLES],
                         invested_capacity[i].out == invested_capacity[i].in + investment_decision[i]  
             
-                        # Reservoir levels unchanged through investment stage
                         rbalance[r in s.RESERVOIRS],
                         reslevel[r].out == reslevel[r].in
 
@@ -146,23 +134,12 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 )
             end
         else
-        #------------------------------------------------------------------------
         # Investment version: the rest of the model is defined for stages after investment stage
-        #-----------------------------------------------------------------------
-            # Defining decision variables for each investment option
             JuMP.@variable(
                 md,
                 investment_decision[i in s.INVESTABLES] == 0
             )
         
-        
-            #CONTINGENT = [
-            #    r for r in s.RESERVOIRS if sum(
-            #        d.reservoirs[r].contingent[timenow][j].level for
-            #        j in 1:length(d.reservoirs[r].contingent[timenow])
-            #    ) > 0.0
-            #]
-
             dr_keys = [
                 (n, bl) for n in keys(d.dr_tranches[timenow]), bl in s.BLOCKS if
                 bl in keys(d.dr_tranches[timenow][n])
@@ -222,11 +199,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     flowunder[FLOWUNDER, s.BLOCKS] >= 0
                     # Spill flows over upper bound (new)
                     spillover[SPILLOVER, s.BLOCKS] >= 0
-                    # Contingent storage tranche
-                    #contingent[
-                    #    r in CONTINGENT,
-                    #    1:length(d.reservoirs[r].contingent[timenow]),
-                    #] >= 0
                     # To track inflow levels seen
                     inflow[[s.CATCHMENTS_WITH_INFLOW; [:scenario]]]
                 end
@@ -379,7 +351,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     # Hydro plant capacities
                     useHydro[m in s.HYDROS, bl in s.BLOCKS],
                     hydro_disp[m, bl] <=
-                    d.hydro_stations[m].capacity - #+ d.inv_hydro[m] * invested_capacity[string(m)].in - 
+                    d.hydro_stations[m].capacity + invested_capacity[string(m)].in - 
                     sum(d.outage[timenow][(mm, bb)] for (mm, bb) in keys(d.outage[timenow]) if (mm, bb) == (m, bl))
 
                     # Investment version: defining capacity constraints for wind
@@ -426,13 +398,11 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     thermal_use[t, bl] <= 0
 
                     # All flow through hydro-stations is used in hydro generation
-
                     defineDispatch[m in s.HYDROS, bl in s.BLOCKS],
                     hydro_disp[m, bl] ==
                     d.hydro_stations[m].sp * releases[d.hydro_stations[m].arc, bl]
 
                     # Define shedding: the load shed over all sectors has to equal the shortage. In MWh.
-
                     defineShedding[n in s.NODES, bl in s.BLOCKS],
                     sum(lostload[n, bl, k] for k in keys(d.dr_tranches[timenow][n][bl])) *
                     durations[bl] >=
@@ -449,26 +419,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     )
                 end
             )
-
-            #if length(CONTINGENT) != 0
-            #    JuMP.@constraints(
-            #        md,
-            #        begin
-            #            contingentstorage[r in CONTINGENT],
-            #            reslevel[r].out >=
-            #            -sum(
-            #                contingent[r, j] / scale_factor for
-            #                j in 1:length(d.reservoirs[r].contingent[timenow])
-            #            )
-
-            #            maxcontingenttranche[
-            #                r in CONTINGENT,
-            #                j in 1:(length(d.reservoirs[r].contingent[timenow])-1),
-            #            ],
-            #            contingent[r, j] <= d.reservoirs[r].contingent[timenow][j].level
-            #        end
-            #    )
-            #end
 
             ###################
             #ABP losses code
@@ -624,16 +574,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 )
             )
 
-            #JuMP.@expression(
-            #    md,
-            #    contingent_storage_cost,
-            #    sum(
-            #        contingent[r, j] / scale_factor *
-            #        d.reservoirs[r].contingent[timenow][j].penalty for r in CONTINGENT,
-            #        j in 1:length(d.reservoirs[r].contingent[timenow])
-            #    )
-            #)
-
             JuMP.@expression(
                 md,
                 carbon_emissions[t in s.THERMALS, bl in s.BLOCKS],
@@ -658,8 +598,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     (name, station) in d.hydro_stations, bl in s.BLOCKS
                 ) +
                 flowpenalties +
-                lostloadcosts #+
-                #contingent_storage_cost
+                lostloadcosts 
             )
 
             if stage < number_of_wks + 1 || !d.rundata.use_terminal_mwvs # Investment version: adding + 1 on number_of_wks here to get to final stage
@@ -744,14 +683,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     JuMP.set_parameter_value(fuel_costs[t, bl], d.fuel_costs[TimePoint(j, timenow.week)][(d.thermal_stations[t].fuel, Symbol(bl))])
                 end
             end
-
-        
-
-            #SDDP.parameterize(md, inflow_uncertainty) do ϕ
-            #    for (c, value) in ϕ
-            #        JuMP.fix(inflow[c], value)
-            #    end
-            #end
 
             #JuMP.@expression(
             #    md,
