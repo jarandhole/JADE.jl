@@ -349,9 +349,12 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     # Capacity constraints
 
                     # Hydro plant capacities
+                    for m in s.HYDROS
+                        println("Hydro station: ", m)
+                    end
                     useHydro[m in s.HYDROS, bl in s.BLOCKS],
                     hydro_disp[m, bl] <=
-                    d.hydro_stations[m].capacity + invested_capacity[string(m)].in - 
+                    d.hydro_stations[m].capacity + (m in s.INVESTABLES ? invested_capacity[m].in : 0) - 
                     sum(d.outage[timenow][(mm, bb)] for (mm, bb) in keys(d.outage[timenow]) if (mm, bb) == (m, bl))
 
                     # Investment version: defining capacity constraints for wind
