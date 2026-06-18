@@ -481,6 +481,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 )
             end
 
+            
             JuMP.@constraints(
                 md,
                 begin
@@ -491,10 +492,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                         sum(durations[bl] * netflow[r, bl] for bl in s.BLOCKS) + totHours * inflow[r]
                     )
                     
-                    # Additional bound for investable reservoirs, to ensure they are bounded by capacity constraints
-                    investableBound[r in s.INVESTABLES && in s.RESERVOIRS],
-                    reslevel[r].out <= invested_capacity[r].in
-
                     # Conservation for junction points with inflow
                     jbalance[c in s.CATCHMENTS_WITH_INFLOW, bl in s.BLOCKS; c in s.JUNCTIONS],
                     netflow[c, bl] + inflow[c] == 0
@@ -504,6 +501,15 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     netflow[c, bl] == 0
                 end
             )
+            
+            investablereservoirs = Symbol[]
+            for r in s.RESERVOIRS
+                if r in s.INVESTABLES
+                    push!(investablereservoirs, r)
+                    # For investable reservoirs, the outflow is bounded by the total capacity (initial plus invested)
+                    JuMP.@constraint(md, investableBound[investablereservoirs], reslevel[r].out <=  invested_capacity[r].in)
+                end
+            end
 
             for dr in d.rundata.decision_rules
                 if timenow.week ∉ dr.weeks
