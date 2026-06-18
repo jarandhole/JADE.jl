@@ -88,12 +88,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             md,
             0 <=
             reslevel[r in s.RESERVOIRS] <=
-            d.reservoirs[r].capacity[timenow] / scale_factor + (r in s.INVESTABLES ? invested_capacity[r] : 0) , # Investment version: adding invested capacity to reservoir capacity
+            r in s.INVESTABLES ? 1000000 : d.reservoirs[r].capacity[timenow] / scale_factor, # unbounded for investable reservoirs, need to be bounded by constraints
             SDDP.State,
             initial_value = d.reservoirs[r].initial / scale_factor
         )
-
-
 
         # Investment version: Define variables, constraints and objective for investment stage
         if stage == 1
@@ -492,6 +490,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     SECONDSPERHOUR / 1E3 * (
                         sum(durations[bl] * netflow[r, bl] for bl in s.BLOCKS) + totHours * inflow[r]
                     )
+                    
+                    # Additional bound for investable reservoirs, to ensure they are bounded by capacity constraints
+                    investableBound[r in s.INVESTABLES && in s.RESERVOIRS],
+                    reslevel[r].out <= invested_capacity[r].in
 
                     # Conservation for junction points with inflow
                     jbalance[c in s.CATCHMENTS_WITH_INFLOW, bl in s.BLOCKS; c in s.JUNCTIONS],
