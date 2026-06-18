@@ -78,24 +78,24 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         JuMP.@variable(
             md,
             0 <=
-            reslevel[r in s.RESERVOIRS] <=
-            d.reservoirs[r].capacity[timenow] / scale_factor,
-            SDDP.State,
-            initial_value = d.reservoirs[r].initial / scale_factor
-        )
-
-        JuMP.@variable(
-            md,
-            0 <=
             invested_capacity[i in s.INVESTABLES] <=
             d.investables[i].max_investment,
             SDDP.State,
             initial_value = 0
         )
+        
+        JuMP.@variable(
+            md,
+            0 <=
+            reslevel[r in s.RESERVOIRS] <=
+            d.reservoirs[r].capacity[timenow] / scale_factor + (r in s.INVESTABLES ? invested_capacity[r] : 0) , # Investment version: adding invested capacity to reservoir capacity
+            SDDP.State,
+            initial_value = d.reservoirs[r].initial / scale_factor
+        )
+
 
 
         # Investment version: Define variables, constraints and objective for investment stage
-
         if stage == 1
             JuMP.@variable(
                 md,
@@ -330,13 +330,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
 
             #------------------------------------------------------------------------
             # Define constraints
-            #------------------------------------------------------------------------
-
-            # Hydro plant capacities
-            for m in s.HYDROS
-                println("Hydro station: ", m)
-            end
-        
+            #------------------------------------------------------------------------        
             JuMP.@constraints(
                 md,
                 begin
