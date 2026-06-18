@@ -331,6 +331,11 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             #------------------------------------------------------------------------
             # Define constraints
             #------------------------------------------------------------------------
+
+            # Hydro plant capacities
+            for m in s.HYDROS
+                println("Hydro station: ", m)
+            end
         
             JuMP.@constraints(
                 md,
@@ -347,11 +352,6 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                     spillover[a, bl] >= spills[a, bl] - d.station_arcs[a].maxflow
 
                     # Capacity constraints
-
-                    # Hydro plant capacities
-                    for m in s.HYDROS
-                        println("Hydro station: ", m)
-                    end
                     useHydro[m in s.HYDROS, bl in s.BLOCKS],
                     hydro_disp[m, bl] <=
                     d.hydro_stations[m].capacity + (m in s.INVESTABLES ? invested_capacity[m].in : 0) - 
