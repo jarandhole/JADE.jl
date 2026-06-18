@@ -88,7 +88,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             md,
             0 <=
             reslevel[r in s.RESERVOIRS] <=
-            r in s.INVESTABLES ? 1000000 : d.reservoirs[r].capacity[timenow] / scale_factor, # unbounded for investable reservoirs, need to be bounded by constraints
+            (r in s.INVESTABLES ? 1000000 : d.reservoirs[r].capacity[timenow] / scale_factor), # unbounded for investable reservoirs, need to be bounded by constraints
             SDDP.State,
             initial_value = d.reservoirs[r].initial / scale_factor
         )
